@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
-import { useFonts, Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
+import { useFonts, Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
 import * as SplashScreen from 'expo-splash-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -16,10 +16,11 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
-  const { theme, neo } = useTheme();
+  const { theme, tokens } = useTheme();
 
   const [fontsLoaded] = useFonts({
     Figtree_400Regular,
+    Figtree_500Medium,
     Figtree_600SemiBold,
     Figtree_700Bold,
   });
@@ -35,7 +36,7 @@ function AppContent() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded || onboardingComplete === null) {
-    return <View style={{ flex: 1, backgroundColor: neo.bg }} />;
+    return <View style={{ flex: 1, backgroundColor: tokens.colors.bg }} />;
   }
 
   return (

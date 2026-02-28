@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppState } from '../contexts/AppStateContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { ExploreScreen } from '../screens/ExploreScreen';
 import { CameraScreen } from '../screens/CameraScreen';
-import { MediaScreen } from '../screens/MediaScreen';
-import { MapScreen } from '../screens/MapScreen';
+import { CollectionScreen } from '../screens/CollectionScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { TabBar } from '../components/TabBar';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { SettingsSheet } from '../components/SettingsSheet';
@@ -16,7 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 export function MainLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const insets = useSafeAreaInsets();
-  const { neo, neoShadowSm } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, shadows: sh, spacing: sp } = tokens;
 
   const {
     activeTab,
@@ -32,29 +34,50 @@ export function MainLayout() {
     setFrameResults,
   } = useAppState();
 
-  const isCamera = activeTab === 'camera';
-  const isMap = activeTab === 'map';
-  const isMedia = activeTab === 'media';
+  const isExplore = activeTab === 'explore';
+  const isIdentify = activeTab === 'identify';
+  const isCollection = activeTab === 'collection';
+  const isProfile = activeTab === 'profile';
+
+  const showFloatingActions = isIdentify;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: neo.bg }]} edges={['top']}>
-      {(isCamera || isMap || isMedia) && (
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.bg }]}
+      edges={isExplore ? [] : ['top']}
+    >
+      {showFloatingActions && (
         <View style={styles.floatingActions}>
           <TouchableOpacity
             onPress={() => setSettingsOpen(true)}
             style={[
               styles.floatingBtn,
               {
-                backgroundColor: 'rgba(0,0,0,0.35)',
-                borderWidth: 2,
-                borderColor: neo.border,
+                backgroundColor: isIdentify ? 'rgba(15,23,42,0.6)' : colors.surface,
+                borderWidth: 1,
+                borderColor: isIdentify ? 'transparent' : colors.borderSubtle,
+                ...sh.sm,
               },
             ]}
           >
-            <Ionicons name="settings-outline" size={22} color="#fff" />
+            <Ionicons
+              name="settings-outline"
+              size={20}
+              color={isIdentify ? '#fff' : colors.textSecondary}
+            />
           </TouchableOpacity>
-          <View style={[styles.floatingBtn, { backgroundColor: 'rgba(0,0,0,0.35)', borderWidth: 2, borderColor: neo.border }]}>
-            <ThemeToggle light />
+          <View
+            style={[
+              styles.floatingBtn,
+              {
+                backgroundColor: isIdentify ? 'rgba(15,23,42,0.6)' : colors.surface,
+                borderWidth: 1,
+                borderColor: isIdentify ? 'transparent' : colors.borderSubtle,
+                ...sh.sm,
+              },
+            ]}
+          >
+            <ThemeToggle light={isIdentify} />
           </View>
         </View>
       )}
@@ -72,41 +95,36 @@ export function MainLayout() {
         setShowOnlyBears={setShowOnlyBears}
       />
 
-      <View style={[styles.content, isCamera && styles.contentFullscreen]}>
-        {activeTab === 'camera' && <CameraScreen />}
-        {activeTab === 'media' && <MediaScreen />}
-        {activeTab === 'map' && <MapScreen />}
+      <View style={[styles.content, (isIdentify || isExplore) && styles.contentFullscreen]}>
+        {isExplore && <ExploreScreen />}
+        {isIdentify && <CameraScreen />}
+        {isCollection && <CollectionScreen />}
+        {isProfile && <ProfileScreen />}
       </View>
 
-      {activeTab !== 'map' && (
+      {isIdentify && (
         <View
           style={[
             styles.resultsWrap,
-            isCamera
-              ? {
-                  position: 'absolute',
-                  bottom: 260 + insets.bottom,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'transparent',
-                  borderTopWidth: 0,
-                  paddingHorizontal: 16,
-                  paddingBottom: 0,
-                }
-              : {
-                  backgroundColor: neo.bg,
-                  borderTopColor: neo.border,
-                  paddingBottom: 80 + insets.bottom,
-                },
+            {
+              position: 'absolute',
+              bottom: 260 + insets.bottom,
+              left: 0,
+              right: 0,
+              backgroundColor: 'transparent',
+              borderTopWidth: 0,
+              paddingHorizontal: sp.lg,
+              paddingBottom: 0,
+            },
           ]}
         >
-          {(activeTab !== 'camera' || (displayDetections?.length ?? 0) > 0) && (
+          {(displayDetections?.length ?? 0) > 0 && (
             <ResultsPanel
               frame={displayFrame ?? undefined}
               detections={displayDetections ?? undefined}
               emptyMessage="No bears detected (above threshold)."
-              compact={isCamera}
-              onDismiss={isCamera ? () => setFrameResults(null) : undefined}
+              compact
+              onDismiss={() => setFrameResults(null)}
             />
           )}
         </View>
@@ -116,8 +134,8 @@ export function MainLayout() {
         style={[
           styles.tabBarWrap,
           {
-            backgroundColor: neo.surface,
-            borderTopColor: neo.border,
+            backgroundColor: colors.surface,
+            borderTopColor: colors.borderSubtle,
             paddingBottom: insets.bottom,
           },
         ]}
@@ -130,36 +148,18 @@ export function MainLayout() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-    fontFamily: 'Figtree_700Bold',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   floatingActions: {
     position: 'absolute',
-    top: 69,
+    top: 60,
     right: 16,
     zIndex: 10,
     flexDirection: 'row',
     gap: 8,
   },
   floatingBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   tabBarWrap: {
-    borderTopWidth: 2,
+    borderTopWidth: 1,
     paddingBottom: 0,
   },
 });

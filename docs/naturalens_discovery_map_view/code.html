@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Naturalens Discovery Map View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b312d", 
+                        "secondary": "#6E8F7A", 
+                        "sand": "#F4F1EA",
+                        "background-light": "#F4F1EA", 
+                        "background-dark": "#181a19", 
+                        "surface-dark": "#252726",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem", 
+                        "lg": "2rem", 
+                        "xl": "3rem", 
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 10px 40px -10px rgba(0,0,0,0.15)",
+                        "glow": "0 0 20px rgba(110, 143, 122, 0.3)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .map-marker {
+            background: rgba(43, 49, 45, 0.85);
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .map-cluster {
+            background: rgba(110, 143, 122, 0.9);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        /* Hide scrollbar for clean horizontal scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen w-full overflow-hidden flex flex-col relative text-slate-900 dark:text-slate-100">
+<!-- Map Background Layer -->
+<div class="absolute inset-0 z-0 w-full h-full bg-cover bg-center" data-alt="Dark stylized map background with terrain texture" data-location="Yosemite National Park" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBVlqyW1xpXF1x9BXQyYz1GENb0aaUMU_H9sC0be7dL1SKaKQ3a-LNc2cDa9B2LxescoSX4FkIx4iuneApSihzHbuH3g23fM2oHgmcvLnCFNUTXnvGU7a3CbB_a7zOENO2djbWYncMH94-I2rhwT11m4eeMOJPN66CoMdhE_gUPEWTynf3O1X_NKcdyW42tKVgXszFvYJjDYpRSFxA0XJXBkrhis0uNScPCNQYGcbgW78H2wQZXkY7HkPrPWRlS6zq0gKk2Kknl5sQ');">
+<!-- Overlay for map readability -->
+<div class="absolute inset-0 bg-background-dark/30 backdrop-blur-[1px]"></div>
+<!-- Simulated Map Markers -->
+<div class="absolute top-1/3 left-1/4 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-12 h-12 rounded-full map-marker flex items-center justify-center relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Red fox face close up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3U_FC9jMYd83ktkjF6qdOx1o8W10EBGNTfXh8eaD-LQMPMM0y4YXpYzACXUQ2iLc0m0wbkUc91os0sSUuLIN077CW39UTwHEzYBQbMj7Cj4DG5MH-UircYwNSXgzwQvQ5GSduwPv05KNOrxNvlGSSdvew5v_OcYMATw0XWtd02eX7Pt6BoV5ZxMa1C1hlfxX7J5z9ovJMbbIIa_-F0Ei8gxaPJR_T8b7oemNzXWDIuKZ2iU4PRtG0ZtmRQfMS-OTlS19uyvEVWPA"/>
+</div>
+<div class="bg-primary/90 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Red Fox</div>
+</div>
+<div class="absolute top-1/2 right-1/4 transform translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+<div class="w-10 h-10 rounded-full map-cluster flex items-center justify-center text-sm font-bold shadow-glow">
+                5
+            </div>
+</div>
+<div class="absolute bottom-1/3 left-1/3 transform -translate-x-1/2 translate-y-1/2 flex flex-col items-center gap-1">
+<div class="w-8 h-8 rounded-full bg-white/20 border border-white/50 flex items-center justify-center animate-pulse">
+<div class="w-2 h-2 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Floating Top Bar -->
+<div class="relative z-10 p-4 pt-12 flex flex-col gap-4">
+<!-- Main Search/Filter Bar -->
+<div class="bg-surface-dark/95 backdrop-blur-md text-white p-2 pl-4 pr-2 rounded-full shadow-soft flex items-center justify-between mx-auto w-full max-w-md border border-white/10">
+<div class="flex flex-col flex-1 mr-4">
+<h2 class="text-sm font-bold leading-tight tracking-wide text-white/90">My Observations</h2>
+<span class="text-xs text-secondary font-medium">23 Species Identified</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 text-white/80 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">tune</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white shadow-lg border border-white/5">
+<span class="material-symbols-outlined" style="font-size: 20px;">list</span>
+</button>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 px-1 snap-x">
+<button class="snap-start shrink-0 h-9 px-4 rounded-full bg-primary text-white text-xs font-medium border border-secondary/30 shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">pets</span>
+                All Species
+            </button>
+<button class="snap-start shrink-0 h-9 px-4 rounded-full bg-surface-dark/80 backdrop-blur-sm text-white/70 text-xs font-medium border border-white/5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">raven</span>
+                Birds
+            </button>
+<button class="snap-start shrink-0 h-9 px-4 rounded-full bg-surface-dark/80 backdrop-blur-sm text-white/70 text-xs font-medium border border-white/5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bug_report</span>
+                Insects
+            </button>
+<button class="snap-start shrink-0 h-9 px-4 rounded-full bg-surface-dark/80 backdrop-blur-sm text-white/70 text-xs font-medium border border-white/5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">forest</span>
+                Flora
+            </button>
+</div>
+</div>
+<!-- Right Side Map Controls -->
+<div class="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
+<div class="flex flex-col gap-0.5 bg-surface-dark/90 backdrop-blur-md rounded-lg shadow-soft border border-white/10 overflow-hidden">
+<button class="flex w-10 h-10 items-center justify-center text-white hover:bg-white/10 active:bg-white/20">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="h-[1px] bg-white/10 w-6 mx-auto"></div>
+<button class="flex w-10 h-10 items-center justify-center text-white hover:bg-white/10 active:bg-white/20">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+<button class="flex w-10 h-10 items-center justify-center rounded-lg bg-surface-dark/90 backdrop-blur-md text-secondary shadow-soft border border-white/10 hover:text-white transition-colors">
+<span class="material-symbols-outlined">my_location</span>
+</button>
+<button class="flex w-10 h-10 items-center justify-center rounded-lg bg-surface-dark/90 backdrop-blur-md text-white shadow-soft border border-white/10 mt-2">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+<!-- Bottom Sheet / Card -->
+<div class="absolute bottom-0 left-0 right-0 z-20 p-4 pb-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+<!-- Selected Observation Card -->
+<div class="bg-surface-dark/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-soft text-white transform transition-transform hover:scale-[1.02] duration-300">
+<div class="flex gap-4">
+<!-- Image Thumbnail -->
+<div class="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-800 relative">
+<img alt="Red Fox in nature" class="w-full h-full object-cover" data-alt="Red Fox looking at camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ1EaAmDiYq3i0MMGqd8im_-gSQGfjj8TYxOcx2j6Png96NmDgyKFZ09pfYUdyecH6VRgPzCln_edvglwu9gqcX55VGLgSIMjfMR9OgbfbNfzygFs4SPwRyPLuwBeSlIcnv5AmMOnMSawkJdTBQgn7CPmZYemkZOwO01uCg3TgPlj-ju86mpz-HNRgn9zkJ8izz9E2AjjVaWrl2ORKu1x8hTISQ_yIGv0AWxn2xVLCu_HP3EM77W46L0OfzXVIt4hcOZNRQqkfJQI"/>
+<div class="absolute top-1 right-1 bg-black/60 backdrop-blur-sm rounded px-1.5 py-0.5 flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px] text-green-400">verified</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex flex-col flex-1 justify-between py-0.5">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-xl font-bold font-display text-white">Red Fox</h3>
+<button class="text-white/40 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="bg-secondary/20 text-secondary text-[10px] font-bold px-2 py-0.5 rounded-full border border-secondary/20">MAMMAL</span>
+<span class="text-xs text-gray-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">calendar_today</span> Oct 24
+                            </span>
+</div>
+</div>
+<div class="flex items-end justify-between mt-3">
+<div class="flex flex-col">
+<span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Confidence</span>
+<div class="flex items-center gap-1.5">
+<div class="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+<div class="bg-green-500 w-[98%] h-full rounded-full"></div>
+</div>
+<span class="text-xs font-bold text-green-400">98%</span>
+</div>
+</div>
+<button class="bg-primary hover:bg-primary/80 text-white text-sm font-bold py-2 px-5 rounded-full transition-colors flex items-center gap-2 border border-white/10 shadow-lg">
+                            Details
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation Bar (Simulated) -->
+<div class="mt-6 flex justify-around items-center px-4">
+<button class="flex flex-col items-center gap-1 text-secondary">
+<span class="material-symbols-outlined filled">map</span>
+<span class="text-[10px] font-bold">Explore</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">photo_camera</span>
+<span class="text-[10px] font-medium">Identify</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">collections_bookmark</span>
+<span class="text-[10px] font-medium">Collection</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</button>
+</div>
+</div>
+</body></html>

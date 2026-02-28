@@ -8,23 +8,27 @@ interface ErrorBannerProps {
 }
 
 export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
-  const { neo, neoShadow } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, typography: typo, spacing: sp, radius: rad } = tokens;
 
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor: 'rgba(239, 68, 68, 0.15)',
-          borderColor: neo.border,
-          borderWidth: 2,
-          ...neoShadow,
+          backgroundColor: 'rgba(239,68,68,0.06)',
+          borderWidth: 1,
+          borderColor: colors.borderSubtle,
+          borderRadius: rad.md,
+          padding: sp.md,
+          marginHorizontal: sp.lg,
+          marginVertical: sp.sm,
         },
       ]}
     >
-      <Text style={[styles.text, { color: neo.error }]}>{message}</Text>
+      <Text style={[typo.bodySm, { color: colors.danger, flex: 1 }]}>{message}</Text>
       <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Ionicons name="close" size={20} color={neo.text} />
+        <Ionicons name="close" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
     </View>
   );
@@ -35,10 +39,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
   },
-  text: { flex: 1, fontSize: 14, fontFamily: 'Figtree_400Regular' },
 });

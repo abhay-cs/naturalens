@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Naturalens Species Collection Grid</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1F3D2B",
+                        "secondary": "#6E8F7A",
+                        "sand": "#F4F1EA",
+                        "surface": "#FFFFFF",
+                        "forest": "#1F3D2B",
+                        "sage": "#6E8F7A"
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "3xl": "1.5rem",
+                        "4xl": "2rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 8px 30px rgba(0,0,0,0.04)",
+                        "inner-soft": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)"
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-sand font-display text-forest min-h-screen flex flex-col">
+<header class="pt-14 px-6 pb-4">
+<div class="flex flex-col gap-6">
+<div class="flex justify-between items-center">
+<h1 class="text-2xl font-bold tracking-tight">Collection</h1>
+<div class="w-10 h-10 rounded-full bg-white shadow-soft flex items-center justify-center border border-sage/10">
+<span class="material-symbols-outlined text-sage text-[20px]">sort</span>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-sage/60 text-[20px]">search</span>
+</div>
+<input class="w-full bg-white border-none rounded-2xl py-3.5 pl-11 pr-4 shadow-soft focus:ring-2 focus:ring-sage/20 placeholder:text-sage/40 text-sm" placeholder="Search your field journal..." type="text"/>
+</div>
+<div class="flex gap-2 overflow-x-auto no-scrollbar -mx-2 px-2">
+<button class="shrink-0 px-5 py-2 rounded-full bg-forest text-sand text-xs font-semibold shadow-md">
+                    Recent
+                </button>
+<button class="shrink-0 px-5 py-2 rounded-full bg-white text-sage text-xs font-semibold border border-sage/10 shadow-soft">
+                    Rare
+                </button>
+<button class="shrink-0 px-5 py-2 rounded-full bg-white text-sage text-xs font-semibold border border-sage/10 shadow-soft">
+                    By Biome
+                </button>
+<button class="shrink-0 px-5 py-2 rounded-full bg-white text-sage text-xs font-semibold border border-sage/10 shadow-soft">
+                    Endangered
+                </button>
+</div>
+</div>
+</header>
+<main class="flex-1 px-6 pb-32">
+<div class="collection-grid pt-4">
+<div class="flex flex-col items-center">
+<div class="relative w-full aspect-square mb-3">
+<div class="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-soft">
+<img alt="Red Fox" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3U_FC9jMYd83ktkjF6qdOx1o8W10EBGNTfXh8eaD-LQMPMM0y4YXpYzACXUQ2iLc0m0wbkUc91os0sSUuLIN077CW39UTwHEzYBQbMj7Cj4DG5MH-UircYwNSXgzwQvQ5GSduwPv05KNOrxNvlGSSdvew5v_OcYMATw0XWtd02eX7Pt6BoV5ZxMa1C1hlfxX7J5z9ovJMbbIIa_-F0Ei8gxaPJR_T8b7oemNzXWDIuKZ2iU4PRtG0ZtmRQfMS-OTlS19uyvEVWPA"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow-md border border-sage/5">
+<span class="material-symbols-outlined text-[14px] text-amber-500 fill-[1]">star</span>
+</div>
+</div>
+<h3 class="font-bold text-sm text-center mb-1">Red Fox</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-sage/10 text-sage text-[10px] font-bold uppercase tracking-wider">Mammal</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative w-full aspect-square mb-3">
+<div class="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-soft">
+<img alt="Mountain Bluebird" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ1EaAmDiYq3i0MMGqd8im_-gSQGfjj8TYxOcx2j6Png96NmDgyKFZ09pfYUdyecH6VRgPzCln_edvglwu9gqcX55VGLgSIMjfMR9OgbfbNfzygFs4SPwRyPLuwBeSlIcnv5AmMOnMSawkJdTBQgn7CPmZYemkZOwO01uCg3TgPlj-ju86mpz-HNRgn9zkJ8izz9E2AjjVaWrl2ORKu1x8hTISQ_yIGv0AWxn2xVLCu_HP3EM77W46L0OfzXVIt4hcOZNRQqkfJQI"/>
+</div>
+</div>
+<h3 class="font-bold text-sm text-center mb-1">Mountain Bluebird</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600/70 text-[10px] font-bold uppercase tracking-wider">Bird</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative w-full aspect-square mb-3">
+<div class="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-soft">
+<img alt="Monarch Butterfly" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu-MqTOMf4A40vQgXJ7vc1RS9_GWGjhVG0G7ckdPHfM7WnY5fp8Zhlq3QVHUMS2oWc1Dp8ugm12vy9ufnexhVqZ-Cvb6gGIOoKE2cmuqNv9X0LjA91F8u2ZuycUp4TsqUq9KWLXe6FYixfxpb0KV_pEI76tpDcWUNjeUIteN0mNaOc8lcI10zWNvxQ82xq9NRTRWrfwPNMjJL1nCNmxgbwNR1xe97Irn6uiHh5s-Bbv68iL0OR5Hv98F12Zu55p3JOQvCSgSCgIj0"/>
+</div>
+</div>
+<h3 class="font-bold text-sm text-center mb-1">Monarch Butterfly</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600/70 text-[10px] font-bold uppercase tracking-wider">Insect</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative w-full aspect-square mb-3">
+<div class="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-soft">
+<img alt="Sword Fern" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4Z3ziclhzfFWCPjnDbkILnSGXZY_Gf4rH9zG8xgGQu31snVYHK6mabzmhOr8yUFWEkmjDk26DCQQKALlQO2mqPdIhJVRLVJ18Tvg3PX4CW_5dDRarvC6NC21gKSsxqDnknQMEqhs6j74R1qaJptzulrcXtrzFL-uV6dmdcvuWKo99hujGnpbpINKtEQtxFN5YuEFDyRrfWMJ0bMEKG-IVaKF08DkG4GJsmgEb4D9DquamtxwMnpVkYxqgnANUGyL296nOQCtwyUA"/>
+</div>
+</div>
+<h3 class="font-bold text-sm text-center mb-1">Sword Fern</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-green-50 text-green-700/70 text-[10px] font-bold uppercase tracking-wider">Flora</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative w-full aspect-square mb-3">
+<div class="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-soft">
+<img alt="Green Turtle" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbCBHqEdaMWIdA44xOXTwVSsXogGdmKow5XbeCsW6D_GiR2NOD54Ke3iDgNC-MkQRgVcPqnK_5KowEFzwi9qnvj6ISERiIkgmaY2h5hko0SA4eydXFblujto6lBU4tE531w9NLkbe2Y0BtpF0C99vW2hGB2jYMg7FJyeTeyv_5ybNbqNL76QKijOCigDzhOi8CKlQXsk3GmBJ7E4tkPS7rVeRA4i4mk5PP9rwBs3KKFzjO3P3GnpfeoAHidOcgu7iQKzisnpz9Sqo"/>
+</div>
+</div>
+<h3 class="font-bold text-sm text-center mb-1">Green Turtle</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700/70 text-[10px] font-bold uppercase tracking-wider">Reptile</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative w-full aspect-square mb-3">
+<div class="w-full h-full rounded-full overflow-hidden border-[6px] border-white shadow-soft">
+<img alt="Pika" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlIWWGPbX5Ip4efbrLGsiOTFVAYA9ybyZfc0urxnSka9W2lVvCcrKOZlNlkUTuaDKtmxAcdA-SkS4KmnccTyj1ZPWPe8nzwRAC5Y01vnOjX36e8M-cV2gW0r_etDRZxhVkYnOGmQbgWR1kEkbbVOAtgk0IsCjjMO9aVzboDh0XSfyaf_Y3EtAJvZOwd_fUz78qfYuVVDETkvQouQdjbO7YB9avA74657TqHTMEQY76EyuQqQ5XWfcqZckSd-QSLmiQisjtlrhLgDo"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow-md border border-sage/5">
+<span class="material-symbols-outlined text-[14px] text-amber-500 fill-[1]">star</span>
+</div>
+</div>
+<h3 class="font-bold text-sm text-center mb-1">American Pika</h3>
+<span class="px-2.5 py-0.5 rounded-full bg-sage/10 text-sage text-[10px] font-bold uppercase tracking-wider">Mammal</span>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-sage/10 px-8 pb-8 pt-4 z-50">
+<div class="flex justify-between items-center max-w-md mx-auto">
+<button class="flex flex-col items-center gap-1 text-sage/60 hover:text-forest transition-colors">
+<span class="material-symbols-outlined text-[24px]">explore</span>
+<span class="text-[10px] font-bold">Explore</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-sage/60 hover:text-forest transition-colors">
+<span class="material-symbols-outlined text-[24px]">center_focus_weak</span>
+<span class="text-[10px] font-bold">Identify</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-forest">
+<span class="material-symbols-outlined text-[24px] fill-[1]">collections_bookmark</span>
+<span class="text-[10px] font-bold">Collection</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-sage/60 hover:text-forest transition-colors">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-bold">Profile</span>
+</button>
+</div>
+</nav>
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-forest text-sand rounded-full shadow-2xl flex items-center justify-center z-40 transform active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[28px]">add_a_photo</span>
+</button>
+
+</body></html>

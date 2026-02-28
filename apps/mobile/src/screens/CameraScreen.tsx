@@ -2,22 +2,29 @@ import { useRef, useState, useCallback } from 'react';
 import {
   StyleSheet,
   View,
-  TouchableOpacity,
   Text,
+  Pressable,
+  Animated,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAppState } from '../contexts/AppStateContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { detectInImage } from '../lib/detector';
+import { HarmonyCard } from '../components/ui/HarmonyCard';
+import { PrimaryButton } from '../components/ui/PrimaryButton';
 
 export function CameraScreen() {
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraReady, setCameraReady] = useState(false);
   const [capturing, setCapturing] = useState(false);
-  const { neo, neoShadow } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, shadows: sh, radius: rad, spacing: sp, motion } = tokens;
+
+  const scale = useRef(new Animated.Value(1)).current;
 
   const {
     filterDetections,
@@ -64,16 +71,39 @@ export function CameraScreen() {
     setInitError,
   ]);
 
-  const borderedContainer = [
+  const handlePressIn = () => {
+    Animated.timing(scale, {
+      toValue: 0.95,
+      duration: motion.durationShort,
+      easing: motion.easingStandard,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: motion.durationShort,
+      easing: motion.easingStandard,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const containerStyle = [
     styles.container,
-    { borderColor: neo.border, borderWidth: 2, borderRadius: 12, overflow: 'hidden', ...neoShadow },
+    {
+      backgroundColor: colors.surface,
+      borderRadius: rad.lg,
+      ...sh.md,
+      overflow: 'hidden' as const,
+    },
   ];
 
   if (!permission) {
     return (
-      <View style={borderedContainer}>
+      <View style={containerStyle}>
         <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>
-          <ActivityIndicator size="large" color={neo.text} />
+          <ActivityIndicator size="large" color={colors.textSecondary} />
         </View>
       </View>
     );
@@ -81,41 +111,41 @@ export function CameraScreen() {
 
   if (Platform.OS === 'web') {
     return (
-      <View style={[borderedContainer, styles.centerContent]}>
-        <Text style={[styles.message, { color: neo.text }]}>
-          Camera preview is not available on web. Use a physical device or simulator.
-        </Text>
-        <Text style={[styles.message, { color: neo.text, fontSize: 14, marginTop: 8 }]}>
-          On iOS Simulator, the camera shows black (no camera hardware).
-        </Text>
+      <View style={[containerStyle, styles.centerContent]}>
+        <HarmonyCard bordered style={{ margin: sp.lg }}>
+          <Text style={[tokens.typography.titleSm, { color: colors.textMain, textAlign: 'center' }]}>
+            Camera not available
+          </Text>
+          <Text style={[tokens.typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: sp.sm }]}>
+            Camera preview is not available on web. Use a physical device or simulator.
+          </Text>
+        </HarmonyCard>
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <View style={[borderedContainer, styles.centerContent]}>
-        <Text style={[styles.message, { color: neo.text }]}>Camera permission is required.</Text>
-        <TouchableOpacity
-          style={[
-            styles.cta,
-            {
-              backgroundColor: neo.accent,
-              borderColor: neo.border,
-              borderWidth: 2,
-              ...neoShadow,
-            },
-          ]}
-          onPress={requestPermission}
-        >
-          <Text style={[styles.ctaText, { color: neo.textInv }]}>Grant permission</Text>
-        </TouchableOpacity>
+      <View style={[containerStyle, styles.centerContent]}>
+        <HarmonyCard bordered style={{ margin: sp.lg, alignItems: 'center' }}>
+          <Text style={[tokens.typography.titleSm, { color: colors.textMain, textAlign: 'center' }]}>
+            Camera permission is required
+          </Text>
+          <Text style={[tokens.typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: sp.sm }]}>
+            Allow NaturaLens to access your camera to detect wildlife.
+          </Text>
+          <PrimaryButton
+            title="Grant permission"
+            onPress={requestPermission}
+            style={{ marginTop: sp.lg }}
+          />
+        </HarmonyCard>
       </View>
     );
   }
 
   return (
-    <View style={borderedContainer}>
+    <View style={containerStyle}>
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -124,32 +154,37 @@ export function CameraScreen() {
       />
       {!cameraReady && (
         <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]} pointerEvents="none">
-          <ActivityIndicator size="large" color={neo.text} />
+          <ActivityIndicator size="large" color={colors.textSecondary} />
         </View>
       )}
       <View style={styles.overlay} pointerEvents="box-none">
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.5)']}
+          style={styles.gradient}
+        />
         <View style={styles.fabWrap}>
-          <TouchableOpacity
-            style={[
-              styles.fab,
-              {
-                backgroundColor: neo.accent,
-                borderColor: neo.border,
-                borderWidth: 2,
-                ...neoShadow,
-                opacity: capturing ? 0.6 : 1,
-              },
-            ]}
-            onPress={captureAndDetect}
-            disabled={!cameraReady || capturing}
-            activeOpacity={0.9}
-          >
-            {capturing ? (
-              <ActivityIndicator color={neo.textInv} size="small" />
-            ) : (
-              <View style={[styles.fabInner, { backgroundColor: neo.textInv }]} />
-            )}
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Pressable
+              style={[
+                styles.fab,
+                {
+                  backgroundColor: colors.surface,
+                  ...sh.md,
+                  opacity: capturing ? 0.6 : 1,
+                },
+              ]}
+              onPress={captureAndDetect}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              disabled={!cameraReady || capturing}
+            >
+              {capturing ? (
+                <ActivityIndicator color={colors.primary} size="small" />
+              ) : (
+                <View style={[styles.fabInner, { backgroundColor: colors.primary }]} />
+              )}
+            </Pressable>
+          </Animated.View>
         </View>
       </View>
     </View>
@@ -162,25 +197,7 @@ const styles = StyleSheet.create({
   loadingOverlay: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  message: {
-    textAlign: 'center',
-    fontSize: 16,
-    fontFamily: 'Figtree_400Regular',
-    padding: 24,
-  },
-  cta: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-    alignSelf: 'center',
-    marginTop: 8,
-  },
-  ctaText: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -188,17 +205,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 50,
   },
-  fabWrap: { alignItems: 'center' },
+  gradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 160,
+  },
+  fabWrap: { alignItems: 'center', zIndex: 1 },
   fab: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
   },
   fabInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
   },
 });

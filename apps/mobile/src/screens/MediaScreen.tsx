@@ -1,21 +1,18 @@
 import { useState, useCallback } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-} from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppState } from '../contexts/AppStateContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { detectInImage } from '../lib/detector';
+import { HarmonyCard } from '../components/ui/HarmonyCard';
+import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { SecondaryButton } from '../components/ui/SecondaryButton';
 
 export function MediaScreen() {
   const [processing, setProcessing] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const { neo, neoShadow, neoShadowLg } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, typography: typo, spacing: sp, radius: rad, shadows: sh } = tokens;
 
   const {
     filterDetections,
@@ -81,117 +78,66 @@ export function MediaScreen() {
   }, [setInitError, setVideoDetections, setVideoFrameMeta, setFrameResults]);
 
   return (
-    <View style={[styles.wrapper, { borderColor: neo.border, borderWidth: 2, borderRadius: 12, overflow: 'hidden', ...neoShadow }]}>
+    <HarmonyCard elevated style={styles.wrapper} padded={false}>
       <ScrollView
-        style={[styles.container, { backgroundColor: neo.bg }]}
-        contentContainerStyle={styles.content}
+        style={styles.container}
+        contentContainerStyle={{ padding: sp.lg, paddingBottom: sp['2xl'] }}
       >
-      <View style={styles.section}>
-        <Text style={[styles.heading, { color: neo.text }]}>Upload Image</Text>
-        <TouchableOpacity
-          style={[
-            styles.btn,
-            {
-              backgroundColor: neo.accent,
-              borderColor: neo.border,
-              borderWidth: 2,
-              ...neoShadow,
-              opacity: processing ? 0.6 : 1,
-            },
-          ]}
-          onPress={pickImage}
-          disabled={processing}
-        >
-          <Text style={[styles.btnText, { color: neo.textInv }]}>
-            {processing ? 'Detecting…' : 'Select Image (JPG/PNG)'}
+        <View style={{ marginBottom: sp.xl }}>
+          <Text style={[typo.titleSm, { color: colors.textMain }]}>Upload image</Text>
+          <Text style={[typo.bodySm, { color: colors.textSecondary, marginTop: sp.xs }]}>
+            Select a photo to analyze for wildlife.
           </Text>
-        </TouchableOpacity>
-        {imageUri && (
-          <View
-            style={[
-              styles.previewWrap,
-              {
-                backgroundColor: neo.bg,
-                borderColor: neo.border,
-                borderWidth: 2,
-                ...neoShadowLg,
-              },
-            ]}
-          >
-            <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="contain" />
-          </View>
-        )}
-      </View>
-      <View style={styles.section}>
-        <Text style={[styles.heading, { color: neo.text }]}>Upload Video</Text>
-        <TouchableOpacity
-          style={[
-            styles.btnSecondary,
-            {
-              backgroundColor: neo.surface,
-              borderColor: neo.border,
-              borderWidth: 2,
-              ...neoShadow,
-            },
-          ]}
-          onPress={pickVideo}
-        >
-          <Text style={[styles.btnTextSecondary, { color: neo.text }]}>Select Video</Text>
-        </TouchableOpacity>
-        <Text style={[styles.hint, { color: neo.text }]}>
-          Video frame detection requires a dev build. Coming soon.
-        </Text>
-      </View>
+          <PrimaryButton
+            title={processing ? 'Detecting…' : 'Select image (JPG/PNG)'}
+            onPress={pickImage}
+            disabled={processing}
+            loading={processing}
+            style={{ marginTop: sp.md, alignSelf: 'flex-start' }}
+          />
+          {imageUri && (
+            <View
+              style={[
+                styles.previewWrap,
+                {
+                  backgroundColor: colors.surfaceMuted,
+                  borderRadius: rad.md,
+                  borderWidth: 1,
+                  borderColor: colors.borderSubtle,
+                  marginTop: sp.lg,
+                  ...sh.sm,
+                },
+              ]}
+            >
+              <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="contain" />
+            </View>
+          )}
+        </View>
+
+        <View>
+          <Text style={[typo.titleSm, { color: colors.textMain }]}>Upload video</Text>
+          <SecondaryButton
+            title="Select video"
+            onPress={pickVideo}
+            style={{ marginTop: sp.md, alignSelf: 'flex-start' }}
+          />
+          <Text style={[typo.bodySm, { color: colors.textSecondary, marginTop: sp.sm }]}>
+            Video frame detection requires a dev build. Coming soon.
+          </Text>
+        </View>
       </ScrollView>
-    </View>
+    </HarmonyCard>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1 },
+  wrapper: { flex: 1, margin: 0 },
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 32 },
-  section: { marginBottom: 24 },
-  heading: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-    marginBottom: 12,
-  },
-  btn: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
-  },
-  btnSecondary: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
-  },
-  btnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-  },
-  btnTextSecondary: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-  },
   previewWrap: {
-    marginTop: 16,
-    borderRadius: 12,
     overflow: 'hidden',
   },
   preview: {
     width: '100%',
-    height: 200,
-  },
-  hint: {
-    fontSize: 12,
-    fontFamily: 'Figtree_400Regular',
-    marginTop: 8,
+    height: 220,
   },
 });

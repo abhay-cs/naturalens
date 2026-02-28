@@ -13,9 +13,7 @@ interface ResultsPanelProps {
   frame?: FrameLike | null;
   detections?: Detection[];
   emptyMessage?: string;
-  /** Compact style for camera tab (floating card) */
   compact?: boolean;
-  /** Optional dismiss callback – when provided, shows an X button (compact only) */
   onDismiss?: () => void;
 }
 
@@ -26,62 +24,70 @@ export function ResultsPanel({
   compact = false,
   onDismiss,
 }: ResultsPanelProps) {
-  const { neo, neoShadow } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, typography: typo, spacing: sp, radius: rad, shadows: sh } = tokens;
   const detections = propDetections ?? frame?.detections ?? [];
+
+  const compactContainer = [
+    styles.compact,
+    {
+      backgroundColor: colors.surface,
+      borderRadius: rad.lg,
+      ...sh.md,
+      padding: sp.md,
+    },
+  ];
+
+  const standardContainer = [
+    styles.container,
+    { borderTopColor: colors.borderSubtle },
+  ];
 
   if (detections.length === 0) {
     return (
-      <View
-        style={[
-          styles.container,
-          compact
-            ? [
-                styles.compact,
-                { backgroundColor: neo.surface, borderColor: neo.border, borderWidth: 2, ...neoShadow },
-              ]
-            : { borderTopColor: neo.border },
-        ]}
-      >
+      <View style={compact ? compactContainer : standardContainer}>
         <View style={styles.headerRow}>
-          <Text style={[styles.title, { color: neo.text }]}>Results</Text>
+          <Text style={[typo.titleSm, { color: colors.textMain }]}>Results</Text>
           {compact && onDismiss && (
             <TouchableOpacity onPress={onDismiss} hitSlop={12}>
-              <Ionicons name="close" size={22} color={neo.text} />
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
-        <Text style={[styles.empty, { color: neo.text }]}>{emptyMessage}</Text>
+        <Text style={[typo.bodySm, { color: colors.textSecondary }]}>{emptyMessage}</Text>
       </View>
     );
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        compact
-          ? [
-              styles.compact,
-              { backgroundColor: neo.surface, borderColor: neo.border, borderWidth: 2, ...neoShadow },
-            ]
-          : { borderTopColor: neo.border },
-      ]}
-    >
+    <View style={compact ? compactContainer : standardContainer}>
       <View style={styles.headerRow}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: neo.text }]}>Results</Text>
-          <Text style={[styles.stat, { color: neo.accent }]}>
-            {detections.length} detection{detections.length !== 1 ? 's' : ''}
-          </Text>
+          <Text style={[typo.titleSm, { color: colors.textMain }]}>Results</Text>
+          <View
+            style={[
+              styles.badge,
+              {
+                backgroundColor: colors.primarySoft,
+                borderRadius: rad.pill,
+                paddingHorizontal: sp.md,
+                paddingVertical: sp.xs,
+              },
+            ]}
+          >
+            <Text style={[typo.caption, { color: colors.primary }]}>
+              {detections.length} detection{detections.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
         </View>
         {compact && onDismiss && (
           <TouchableOpacity onPress={onDismiss} hitSlop={12}>
-            <Ionicons name="close" size={22} color={neo.text} />
+            <Ionicons name="close" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
       {frame?.timestamp != null && !compact && (
-        <Text style={[styles.meta, { color: neo.text }]}>
+        <Text style={[typo.caption, { color: colors.textSecondary, marginBottom: sp.md }]}>
           Frame {frame.frameIndex ?? '—'} · {frame.timestamp?.toFixed(1)}s
         </Text>
       )}
@@ -90,27 +96,43 @@ export function ResultsPanel({
         nestedScrollEnabled
         showsVerticalScrollIndicator={compact}
       >
-      {detections.map((d, i) => (
-        <View
-          key={i}
-          style={[
-            compact ? styles.rowCompact : styles.row,
-            {
-              backgroundColor: compact ? 'transparent' : neo.surface,
-              borderColor: neo.border,
-              borderWidth: compact ? 0 : 2,
-              ...(compact ? {} : neoShadow),
-            },
-          ]}
-        >
-          <Text style={[styles.label, { color: neo.text }]}>{d.label}</Text>
-          <Text style={[styles.score, { color: neo.accent }]}>{(d.score * 100).toFixed(1)}%</Text>
-          <Text style={[styles.bbox, { color: neo.text }]}>
-            x:{d.bbox.x.toFixed(0)} y:{d.bbox.y.toFixed(0)} w:{d.bbox.w.toFixed(0)} h:
-            {d.bbox.h.toFixed(0)}
-          </Text>
-        </View>
-      ))}
+        {detections.map((d, i) => {
+          const scoreColor = d.score >= 0.7 ? colors.success : colors.danger;
+          return compact ? (
+            <View key={i} style={[styles.rowCompact, { paddingVertical: sp.sm }]}>
+              <Text style={[typo.bodySm, { color: colors.textMain }]}>{d.label}</Text>
+              <Text style={[typo.bodySm, { color: scoreColor, marginLeft: sp.sm }]}>
+                {(d.score * 100).toFixed(1)}%
+              </Text>
+            </View>
+          ) : (
+            <View
+              key={i}
+              style={[
+                styles.row,
+                {
+                  backgroundColor: colors.surfaceMuted,
+                  borderWidth: 1,
+                  borderColor: colors.borderSubtle,
+                  borderRadius: rad.md,
+                  padding: sp.lg,
+                  marginBottom: sp.sm,
+                },
+              ]}
+            >
+              <View style={styles.rowTop}>
+                <Text style={[typo.titleSm, { color: colors.textMain }]}>{d.label}</Text>
+                <Text style={[typo.bodySm, { color: scoreColor }]}>
+                  {(d.score * 100).toFixed(1)}%
+                </Text>
+              </View>
+              <Text style={[typo.caption, { color: colors.textSecondary, marginTop: sp.xs }]}>
+                x:{d.bbox.x.toFixed(0)} y:{d.bbox.y.toFixed(0)} w:{d.bbox.w.toFixed(0)} h:
+                {d.bbox.h.toFixed(0)}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -118,14 +140,11 @@ export function ResultsPanel({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    paddingTop: 24,
-    paddingBottom: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     borderTopWidth: 1,
   },
   compact: {
-    borderRadius: 12,
-    padding: 12,
     maxHeight: 120,
     borderTopWidth: 0,
   },
@@ -140,55 +159,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 12,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-  },
-  stat: {
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-  },
-  meta: {
-    fontSize: 14,
-    fontFamily: 'Figtree_400Regular',
-    marginBottom: 12,
-  },
-  empty: {
-    fontSize: 15,
-    fontFamily: 'Figtree_400Regular',
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 8,
-    padding: 16,
-    marginBottom: 10,
-    borderRadius: 12,
+  },
+  badge: {},
+  row: {},
+  rowTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
   },
   rowCompact: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    padding: 6,
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-  },
-  score: {
-    fontSize: 15,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-  },
-  bbox: {
-    fontSize: 12,
-    fontFamily: 'Figtree_400Regular',
+    alignItems: 'center',
   },
 });

@@ -1,5 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightTheme, darkTheme, neoShadow, neoShadowSm, neoShadowLg, type NeoTheme } from '../theme';
+import {
+  lightColors,
+  darkColors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  motion,
+  type Tokens,
+} from '../theme';
 import {
   createContext,
   useCallback,
@@ -17,11 +26,8 @@ type Theme = 'light' | 'dark';
 interface ThemeContextValue {
   theme: Theme;
   setTheme: (t: Theme) => void;
-  neo: NeoTheme;
+  tokens: Tokens;
   isDark: boolean;
-  neoShadow: typeof neoShadow;
-  neoShadowSm: typeof neoShadowSm;
-  neoShadowLg: typeof neoShadowLg;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -50,16 +56,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const resolvedTheme: Theme = loaded ? theme : (systemScheme === 'dark' ? 'dark' : 'light');
 
   const value: ThemeContextValue = useMemo(() => {
-    const neo = resolvedTheme === 'dark' ? darkTheme : lightTheme;
-    const shadowColor = resolvedTheme === 'dark' ? '#fff' : '#000';
+    const colors = resolvedTheme === 'dark' ? darkColors : lightColors;
     return {
       theme: resolvedTheme,
       setTheme,
-      neo,
       isDark: resolvedTheme === 'dark',
-      neoShadow: { ...neoShadow, shadowColor },
-      neoShadowSm: { ...neoShadowSm, shadowColor },
-      neoShadowLg: { ...neoShadowLg, shadowColor },
+      tokens: { colors, typography, spacing, radius, shadows, motion },
     };
   }, [resolvedTheme, setTheme]);
 

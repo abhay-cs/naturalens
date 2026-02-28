@@ -8,7 +8,7 @@ import {
 } from 'react';
 import type { Detection, FrameResults } from '../types';
 
-export type TabId = 'camera' | 'media' | 'map';
+export type TabId = 'explore' | 'identify' | 'collection' | 'profile';
 
 interface AppStateContextValue {
   activeTab: TabId;
@@ -31,7 +31,7 @@ interface AppStateContextValue {
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<TabId>('camera');
+  const [activeTab, setActiveTab] = useState<TabId>('explore');
   const [scoreThreshold, setScoreThreshold] = useState(0.4);
   const [showOnlyBears, setShowOnlyBears] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
@@ -56,7 +56,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const detectorOptions = useMemo(() => ({ scoreThreshold }), [scoreThreshold]);
 
   const displayFrame: AppStateContextValue['displayFrame'] =
-    activeTab === 'media' && videoDetections && videoFrameMeta
+    activeTab === 'collection' && videoDetections && videoFrameMeta
       ? { detections: videoDetections, ...videoFrameMeta }
       : frameResults ?? null;
 

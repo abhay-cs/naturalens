@@ -26,14 +26,15 @@ export function SettingsSheet({
   showOnlyBears,
   setShowOnlyBears,
 }: SettingsSheetProps) {
-  const { neo } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, typography: typo, spacing: sp, radius: rad } = tokens;
 
   if (!open) return null;
 
   return (
     <Modal visible animationType="slide" transparent>
       <TouchableOpacity
-        style={styles.backdrop}
+        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
         activeOpacity={1}
         onPress={onClose}
       >
@@ -41,44 +42,57 @@ export function SettingsSheet({
           style={[
             styles.sheet,
             {
-              backgroundColor: neo.surface,
-              borderColor: neo.border,
-              borderTopWidth: 2,
-              borderLeftWidth: 2,
-              borderRightWidth: 2,
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: rad.lg,
+              borderTopRightRadius: rad.lg,
+              borderTopWidth: 1,
+              borderTopColor: colors.borderSubtle,
+              paddingHorizontal: sp.xl,
+              paddingTop: sp.lg,
+              paddingBottom: 40,
             },
           ]}
           activeOpacity={1}
           onPress={(e) => e.stopPropagation()}
         >
-          <View style={[styles.handle, { backgroundColor: neo.border }]} />
-          <Text style={[styles.title, { color: neo.text }]}>Detection settings</Text>
-          <View style={styles.row}>
-            <Text style={[styles.label, { color: neo.text }]}>Threshold</Text>
-            <View style={styles.sliderRow}>
-              <Slider
-                style={styles.slider}
-                minimumValue={0.1}
-                maximumValue={0.9}
-                step={0.05}
-                value={scoreThreshold}
-                onValueChange={setScoreThreshold}
-                minimumTrackTintColor={neo.accent}
-                maximumTrackTintColor={neo.border}
-                thumbTintColor={neo.accent}
-              />
-              <Text style={[styles.value, { color: neo.text }]}>
+          <View style={[styles.handle, { backgroundColor: colors.borderSubtle, borderRadius: rad.pill }]} />
+
+          <Text style={[typo.titleMd, { color: colors.textMain, marginBottom: sp.xl }]}>
+            Detection settings
+          </Text>
+
+          <View style={{ marginBottom: sp.lg }}>
+            <View style={styles.sliderLabelRow}>
+              <Text style={[typo.titleSm, { color: colors.textMain }]}>Threshold</Text>
+              <Text style={[typo.titleSm, { color: colors.textMain }]}>
                 {scoreThreshold.toFixed(2)}
               </Text>
             </View>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.1}
+              maximumValue={0.9}
+              step={0.05}
+              value={scoreThreshold}
+              onValueChange={setScoreThreshold}
+              minimumTrackTintColor={colors.primary}
+              maximumTrackTintColor={colors.borderSubtle}
+              thumbTintColor={colors.primary}
+            />
           </View>
-          <View style={[styles.row, styles.toggleRow]}>
-            <Text style={[styles.label, { color: neo.text }]}>Bears only</Text>
+
+          <View style={styles.toggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[typo.titleSm, { color: colors.textMain }]}>Bears only</Text>
+              <Text style={[typo.bodySm, { color: colors.textSecondary, marginTop: sp.xs }]}>
+                Filter results to show only bear detections.
+              </Text>
+            </View>
             <Switch
               value={showOnlyBears}
               onValueChange={setShowOnlyBears}
-              trackColor={{ false: neo.border, true: neo.accent }}
-              thumbColor={showOnlyBears ? neo.textInv : neo.surface}
+              trackColor={{ false: colors.borderSubtle, true: colors.primary }}
+              thumbColor="#fff"
             />
           </View>
         </TouchableOpacity>
@@ -90,41 +104,22 @@ export function SettingsSheet({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
-  sheet: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-    paddingBottom: 40,
-  },
+  sheet: {},
   handle: {
     width: 36,
     height: 4,
-    borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 16,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-    marginBottom: 20,
-  },
-  row: { marginBottom: 16 },
-  label: {
-    fontSize: 16,
-    fontFamily: 'Figtree_400Regular',
+  sliderLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 4,
   },
-  sliderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  slider: { flex: 1, height: 40 },
-  value: {
-    fontSize: 16,
-    minWidth: 40,
-    fontFamily: 'Figtree_600SemiBold',
-  },
+  slider: { width: '100%', height: 40 },
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -22,11 +22,15 @@ function formatTimestamp(ts: number): string {
 
 function buildMapHtml(
   captures: Capture[],
-  borderColor: string,
   isDark: boolean,
-  accentPurple: string,
-  highlight: string,
+  primary: string,
+  primarySoft: string,
   surface: string,
+  surfaceMuted: string,
+  borderSubtle: string,
+  textMain: string,
+  textSecondary: string,
+  success: string,
   bg: string
 ): string {
   const tileUrl = isDark
@@ -37,8 +41,11 @@ function buildMapHtml(
       id: c.id,
       lat: c.lat,
       lng: c.lng,
-      label: `${c.detections.length} detection(s)`,
+      label: c.detections[0]?.label ?? 'Unknown',
+      initial: (c.detections[0]?.label ?? 'U')[0],
+      count: c.detections.length,
       animals: c.detections.map((d) => d.label).join(', ') || '—',
+      score: c.detections[0]?.score ?? 0,
       source: sourceLabel(c.source),
       when: formatTimestamp(c.timestamp),
     }))
@@ -54,84 +61,112 @@ function buildMapHtml(
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: ${bg}; }
-    #map-wrapper, #map { width: 100%; height: 100%; }
-    .neo-custom { background: none !important; border: none !important; }
-    .neo-marker {
-      background: #84cc16;
-      border: 2px solid ${borderColor};
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 2px 2px 0 ${borderColor};
-      width: 24px;
-      height: 24px;
+    #map { width: 100%; height: 100%; }
+    .custom-icon { background: none !important; border: none !important; }
+    .photo-marker {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: ${surface};
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: ${primary};
+      overflow: hidden;
+    }
+    .cluster-marker {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: ${primary};
+      border: 2px solid rgba(255,255,255,0.6);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
     }
     .leaflet-popup-content-wrapper {
-      background: #a855f7;
-      border: 2px solid ${borderColor};
-      border-radius: 10px;
-      box-shadow: 4px 4px 0 ${borderColor};
+      background: ${surface};
+      border: 1px solid ${borderSubtle};
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      overflow: hidden;
     }
+    .leaflet-popup-tip { background: ${surface}; }
     .leaflet-popup-content {
-      margin: 12px;
-      min-width: 160px;
-      color: white;
+      margin: 0;
+      min-width: 200px;
+      color: ${textMain};
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    .popup-title { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
-    .popup-row { font-size: 14px; margin-bottom: 4px; }
-    .leaflet-tile-pane {
-      filter: sepia(0.2) saturate(1.15);
-    }
-    .map-accent-overlay {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, ${accentPurple}30 0%, ${highlight}25 50%, ${accentPurple}25 100%);
-      pointer-events: none;
-      z-index: 400;
-    }
-    .leaflet-control-zoom a {
-      background: ${surface} !important;
-      color: ${borderColor} !important;
-      border: 2px solid ${borderColor} !important;
-      font-weight: 700 !important;
-    }
-    .leaflet-control-zoom a:hover {
-      background: ${highlight} !important;
-      color: ${surface} !important;
-    }
-    .leaflet-control-attribution {
-      background: ${surface} !important;
-      color: ${borderColor} !important;
-      border-top: 2px solid ${borderColor};
-      border-left: 2px solid ${borderColor};
+    .popup-inner { padding: 14px; }
+    .popup-species { font-weight: 700; font-size: 16px; color: ${textMain}; margin-bottom: 4px; }
+    .popup-badge {
+      display: inline-block;
+      background: ${primarySoft};
+      color: ${primary};
       font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-right: 6px;
+    }
+    .popup-meta { font-size: 12px; color: ${textSecondary}; margin-top: 6px; }
+    .popup-confidence { margin-top: 8px; }
+    .popup-bar-bg { height: 4px; background: ${borderSubtle}; border-radius: 2px; overflow: hidden; }
+    .popup-bar-fill { height: 100%; background: ${success}; border-radius: 2px; }
+    .popup-score { font-size: 12px; font-weight: 700; color: ${success}; margin-top: 2px; }
+    .leaflet-control-zoom { display: none; }
+    .leaflet-control-attribution {
+      background: transparent !important;
+      color: ${textSecondary} !important;
+      font-size: 9px;
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
-  <div id="map-wrapper" style="position:relative; width:100%; height:100%">
-    <div id="map"></div>
-    <div class="map-accent-overlay"></div>
-  </div>
+  <div id="map"></div>
   <script>
     const captures = ${capturesJson};
     const map = L.map('map', { zoomControl: false }).setView([45.5, -73.5], 4);
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('${tileUrl}', {
-      attribution: '© OpenStreetMap contributors © CARTO'
+      attribution: '© OpenStreetMap © CARTO'
     }).addTo(map);
-    const neoIcon = L.divIcon({
-      className: 'neo-custom',
-      html: '<div class="neo-marker"></div>',
-      iconSize: [24, 24],
-      iconAnchor: [12, 24]
-    });
     captures.forEach(function(c) {
-      const marker = L.marker([c.lat, c.lng], { icon: neoIcon }).addTo(map);
-      const popup = '<div class="popup-title">' + c.label + '</div>' +
-        '<div class="popup-row"><strong>Animals:</strong> ' + c.animals + '</div>' +
-        '<div class="popup-row"><strong>Source:</strong> ' + c.source + '</div>' +
-        '<div class="popup-row"><strong>When:</strong> ' + c.when + '</div>';
-      marker.bindPopup(popup);
+      var iconHtml;
+      if (c.count > 1) {
+        iconHtml = '<div class="cluster-marker">' + c.count + '</div>';
+      } else {
+        iconHtml = '<div class="photo-marker">' + c.initial + '</div>';
+      }
+      var icon = L.divIcon({
+        className: 'custom-icon',
+        html: iconHtml,
+        iconSize: c.count > 1 ? [36, 36] : [44, 44],
+        iconAnchor: c.count > 1 ? [18, 18] : [22, 22]
+      });
+      var marker = L.marker([c.lat, c.lng], { icon: icon }).addTo(map);
+      var pct = Math.round(c.score * 100);
+      var popup = '<div class="popup-inner">' +
+        '<div class="popup-species">' + c.label + '</div>' +
+        '<div><span class="popup-badge">SPECIES</span></div>' +
+        '<div class="popup-meta">' + c.source + ' · ' + c.when + '</div>' +
+        '<div class="popup-confidence">' +
+          '<div class="popup-bar-bg"><div class="popup-bar-fill" style="width:' + pct + '%"></div></div>' +
+          '<div class="popup-score">' + pct + '% confidence</div>' +
+        '</div>' +
+      '</div>';
+      marker.bindPopup(popup, { closeButton: false });
     });
   </script>
 </body>
@@ -139,15 +174,29 @@ function buildMapHtml(
 }
 
 export function MapWebView() {
-  const { neo, neoShadow, isDark } = useTheme();
+  const { tokens, isDark } = useTheme();
+  const { colors } = tokens;
+
   const html = useMemo(
     () =>
-      buildMapHtml(DUMMY_CAPTURES, neo.border, isDark, neo.accentPurple, neo.highlight, neo.surface, neo.bg),
-    [neo.border, neo.accentPurple, neo.highlight, neo.surface, neo.bg, isDark]
+      buildMapHtml(
+        DUMMY_CAPTURES,
+        isDark,
+        colors.primary,
+        colors.primarySoft,
+        colors.surface,
+        colors.surfaceMuted,
+        colors.borderSubtle,
+        colors.textMain,
+        colors.textSecondary,
+        colors.success,
+        colors.bg
+      ),
+    [colors, isDark]
   );
 
   return (
-    <View style={[styles.container, { borderColor: neo.border, borderWidth: 2, borderRadius: 12, overflow: 'hidden', ...neoShadow }]}>
+    <View style={styles.container}>
       <WebView
         style={styles.webview}
         source={{ html, baseUrl: 'https://example.com' }}

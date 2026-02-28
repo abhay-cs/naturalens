@@ -1,6 +1,7 @@
 import { StyleSheet, Text, ScrollView, View } from 'react-native';
 import { DUMMY_CAPTURES } from '../data/dummyCaptures';
 import { useTheme } from '../contexts/ThemeContext';
+import { HarmonyCard } from '../components/ui/HarmonyCard';
 import type { Capture } from '../types';
 
 function formatTimestamp(ts: number): string {
@@ -19,78 +20,35 @@ function sourceLabel(source: Capture['source']): string {
 }
 
 export function MapFallbackView() {
-  const { neo, neoShadow } = useTheme();
+  const { tokens } = useTheme();
+  const { colors, typography: typo, spacing: sp } = tokens;
 
   return (
-    <View style={[styles.wrapper, { borderColor: neo.border, borderWidth: 2, borderRadius: 12, overflow: 'hidden', ...neoShadow, backgroundColor: neo.bg }]}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { color: neo.text }]}>Map</Text>
-        <Text style={[styles.subtitle, { color: neo.text }]}>
+    <HarmonyCard elevated style={styles.wrapper} padded={false}>
+      <ScrollView style={styles.container} contentContainerStyle={{ padding: sp.lg, paddingBottom: sp['2xl'] }}>
+        <Text style={[typo.titleLg, { color: colors.textMain }]}>Map</Text>
+        <Text style={[typo.bodySm, { color: colors.textSecondary, marginTop: sp.xs, marginBottom: sp.lg }]}>
           Run a development build for native maps. In Expo Go, captures are listed below:
         </Text>
         {DUMMY_CAPTURES.map((capture) => (
-          <View
-            key={capture.id}
-            style={[
-              styles.card,
-              {
-                backgroundColor: neo.surface,
-                borderColor: neo.border,
-                borderWidth: 2,
-                ...neoShadow,
-              },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: neo.text }]}>
+          <HarmonyCard key={capture.id} bordered style={{ marginBottom: sp.md, padding: sp.md }}>
+            <Text style={[typo.titleSm, { color: colors.textMain }]}>
               {capture.detections.length} detection(s) @ {capture.lat.toFixed(2)}, {capture.lng.toFixed(2)}
             </Text>
-            <Text style={[styles.row, { color: neo.text }]}>
-              <Text style={styles.bold}>Animals:</Text>{' '}
+            <Text style={[typo.caption, { color: colors.textSecondary, marginTop: sp.xs }]}>
               {capture.detections.map((d) => d.label).join(', ') || '—'}
             </Text>
-            <Text style={[styles.row, { color: neo.text }]}>
-              <Text style={styles.bold}>Source:</Text> {sourceLabel(capture.source)}
+            <Text style={[typo.caption, { color: colors.textSecondary, marginTop: sp.xs }]}>
+              {sourceLabel(capture.source)} · {formatTimestamp(capture.timestamp)}
             </Text>
-            <Text style={[styles.row, { color: neo.text }]}>
-              <Text style={styles.bold}>When:</Text> {formatTimestamp(capture.timestamp)}
-            </Text>
-          </View>
+          </HarmonyCard>
         ))}
       </ScrollView>
-    </View>
+    </HarmonyCard>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: { flex: 1, margin: 12 },
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 32 },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    fontFamily: 'Figtree_700Bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontFamily: 'Figtree_400Regular',
-    marginBottom: 16,
-  },
-  card: {
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    fontFamily: 'Figtree_600SemiBold',
-    marginBottom: 6,
-  },
-  row: {
-    fontSize: 12,
-    fontFamily: 'Figtree_400Regular',
-    marginBottom: 2,
-  },
-  bold: { fontWeight: '600', fontFamily: 'Figtree_600SemiBold' },
 });
