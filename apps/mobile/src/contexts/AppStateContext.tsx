@@ -6,9 +6,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { Detection, FrameResults } from '../types';
+import type { Detection, FrameResults, Species } from '../types';
 
-export type TabId = 'explore' | 'identify' | 'collection' | 'profile';
+export type TabId = 'home' | 'map' | 'favorites' | 'profile' | 'camera';
 
 interface AppStateContextValue {
   activeTab: TabId;
@@ -26,12 +26,16 @@ interface AppStateContextValue {
   setVideoFrameMeta: (m: { timestamp?: number; frameIndex?: number } | null) => void;
   displayFrame: FrameResults | { detections?: Detection[]; timestamp?: number; frameIndex?: number } | null;
   displayDetections: Detection[] | null;
+  selectedSpecies: Species | null;
+  setSelectedSpecies: (s: Species | null) => void;
+  favoriteSpeciesIds: string[];
+  toggleFavorite: (speciesId: string) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<TabId>('explore');
+  const [activeTab, setActiveTab] = useState<TabId>('home');
   const [scoreThreshold, setScoreThreshold] = useState(0.4);
   const [showOnlyBears, setShowOnlyBears] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
@@ -41,6 +45,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     timestamp?: number;
     frameIndex?: number;
   } | null>(null);
+  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null);
+  const [favoriteSpeciesIds, setFavoriteSpeciesIds] = useState<string[]>([]);
+
+  const toggleFavorite = useCallback((speciesId: string) => {
+    setFavoriteSpeciesIds((prev) =>
+      prev.includes(speciesId) ? prev.filter((id) => id !== speciesId) : [...prev, speciesId]
+    );
+  }, []);
 
   const filterDetections = useCallback(
     (detections: Detection[]): Detection[] => {
@@ -56,7 +68,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const detectorOptions = useMemo(() => ({ scoreThreshold }), [scoreThreshold]);
 
   const displayFrame: AppStateContextValue['displayFrame'] =
-    activeTab === 'collection' && videoDetections && videoFrameMeta
+    activeTab === 'camera' && videoDetections && videoFrameMeta
       ? { detections: videoDetections, ...videoFrameMeta }
       : frameResults ?? null;
 
@@ -79,6 +91,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setVideoFrameMeta,
       displayFrame,
       displayDetections,
+      selectedSpecies,
+      setSelectedSpecies,
+      favoriteSpeciesIds,
+      toggleFavorite,
     }),
     [
       activeTab,
@@ -89,6 +105,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       detectorOptions,
       displayFrame,
       displayDetections,
+      selectedSpecies,
+      favoriteSpeciesIds,
+      toggleFavorite,
     ]
   );
 

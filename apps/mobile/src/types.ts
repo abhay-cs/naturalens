@@ -31,3 +31,33 @@ export interface Capture {
   timestamp: number;
   source: 'camera' | 'image' | 'video';
 }
+
+/** Habitat filter / species habitat */
+export type HabitatId = 'all' | 'forest' | 'ocean' | 'desert' | 'urban' | 'wetland';
+
+export type SpeciesCategory = 'mammal' | 'bird' | 'insect' | 'flora' | 'reptile';
+
+/** Species for discovery feed and detail view */
+export interface Species {
+  id: string;
+  label: string;
+  category: SpeciesCategory;
+  imageUrl: string;
+  region: string;
+  habitat: Exclude<HabitatId, 'all'>;
+  description: string;
+  observationGuide: string;
+  isFavorite: boolean;
+  sightings?: number;
+  lastSeen?: number;
+}
+
+/** Single sighting for Recent Sightings list */
+export interface Sighting {
+  id: string;
+  speciesId: string;
+  imageUrl: string;
+  label: string;
+  region: string;
+  timestamp: number;
+}

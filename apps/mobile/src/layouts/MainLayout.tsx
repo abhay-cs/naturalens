@@ -3,11 +3,13 @@ import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppState } from '../contexts/AppStateContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { HomeScreen } from '../screens/HomeScreen';
 import { ExploreScreen } from '../screens/ExploreScreen';
 import { CameraScreen } from '../screens/CameraScreen';
-import { CollectionScreen } from '../screens/CollectionScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
-import { TabBar } from '../components/TabBar';
+import { SpeciesDetailScreen } from '../screens/SpeciesDetailScreen';
+import { TabBar, CameraNavButton } from '../components/TabBar';
 import { ResultsPanel } from '../components/ResultsPanel';
 import { SettingsSheet } from '../components/SettingsSheet';
 import { ErrorBanner } from '../components/ErrorBanner';
@@ -32,19 +34,22 @@ export function MainLayout() {
     displayFrame,
     displayDetections,
     setFrameResults,
+    selectedSpecies,
+    setSelectedSpecies,
   } = useAppState();
 
-  const isExplore = activeTab === 'explore';
-  const isIdentify = activeTab === 'identify';
-  const isCollection = activeTab === 'collection';
+  const isHome = activeTab === 'home';
+  const isMap = activeTab === 'map';
+  const isCamera = activeTab === 'camera';
+  const isFavorites = activeTab === 'favorites';
   const isProfile = activeTab === 'profile';
 
-  const showFloatingActions = isIdentify;
+  const showFloatingActions = isProfile;
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.bg }]}
-      edges={isExplore ? [] : ['top']}
+      edges={isHome || isMap ? [] : ['top']}
     >
       {showFloatingActions && (
         <View style={styles.floatingActions}>
@@ -53,9 +58,9 @@ export function MainLayout() {
             style={[
               styles.floatingBtn,
               {
-                backgroundColor: isIdentify ? 'rgba(15,23,42,0.6)' : colors.surface,
+                backgroundColor: isCamera ? 'rgba(15,23,42,0.6)' : colors.surface,
                 borderWidth: 1,
-                borderColor: isIdentify ? 'transparent' : colors.borderSubtle,
+                borderColor: isCamera ? 'transparent' : colors.borderSubtle,
                 ...sh.sm,
               },
             ]}
@@ -63,21 +68,21 @@ export function MainLayout() {
             <Ionicons
               name="settings-outline"
               size={20}
-              color={isIdentify ? '#fff' : colors.textSecondary}
+              color={isCamera ? '#fff' : colors.textSecondary}
             />
           </TouchableOpacity>
           <View
             style={[
               styles.floatingBtn,
               {
-                backgroundColor: isIdentify ? 'rgba(15,23,42,0.6)' : colors.surface,
+                backgroundColor: isCamera ? 'rgba(15,23,42,0.6)' : colors.surface,
                 borderWidth: 1,
-                borderColor: isIdentify ? 'transparent' : colors.borderSubtle,
+                borderColor: isCamera ? 'transparent' : colors.borderSubtle,
                 ...sh.sm,
               },
             ]}
           >
-            <ThemeToggle light={isIdentify} />
+            <ThemeToggle light={isCamera} />
           </View>
         </View>
       )}
@@ -95,14 +100,22 @@ export function MainLayout() {
         setShowOnlyBears={setShowOnlyBears}
       />
 
-      <View style={[styles.content, (isIdentify || isExplore) && styles.contentFullscreen]}>
-        {isExplore && <ExploreScreen />}
-        {isIdentify && <CameraScreen />}
-        {isCollection && <CollectionScreen />}
+      <View style={[styles.content, (isCamera || isHome || isMap) && styles.contentFullscreen]}>
+        {isHome && <HomeScreen />}
+        {isMap && <ExploreScreen />}
+        {isCamera && <CameraScreen />}
+        {isFavorites && <FavoritesScreen />}
         {isProfile && <ProfileScreen />}
       </View>
 
-      {isIdentify && (
+      {selectedSpecies && (
+        <SpeciesDetailScreen
+          species={selectedSpecies}
+          onClose={() => setSelectedSpecies(null)}
+        />
+      )}
+
+      {isCamera && (
         <View
           style={[
             styles.resultsWrap,
@@ -130,18 +143,24 @@ export function MainLayout() {
         </View>
       )}
 
-      <View
-        style={[
-          styles.tabBarWrap,
-          {
-            backgroundColor: colors.surface,
-            borderTopColor: colors.borderSubtle,
-            paddingBottom: insets.bottom,
-          },
-        ]}
-      >
-        <TabBar active={activeTab} onSelect={setActiveTab} />
-      </View>
+      {!isCamera && (
+        <View
+          style={[
+            styles.tabBarWrap,
+            {
+              paddingBottom: insets.bottom + 12,
+            },
+          ]}
+        >
+          <View style={styles.tabBarRow}>
+            <TabBar active={activeTab} onSelect={setActiveTab} />
+            <CameraNavButton
+              isActive={false}
+              onPress={() => setActiveTab('camera')}
+            />
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -171,7 +190,21 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   tabBarWrap: {
-    borderTopWidth: 1,
-    paddingBottom: 0,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    zIndex: 100,
+    elevation: 8,
+  },
+  tabBarRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    marginLeft: 8,
+    minHeight: 60,
   },
 });

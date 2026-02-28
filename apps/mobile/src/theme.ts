@@ -1,7 +1,7 @@
 import { Easing } from 'react-native';
 
 export const lightColors = {
-  bg: '#F4F1EA',
+  bg: '#F7F8FA',
   surface: '#FFFFFF',
   surfaceMuted: '#F7F5F0',
   borderSubtle: '#DDD9D0',
@@ -118,6 +118,7 @@ export const radius = {
   sm: 8,
   md: 12,
   lg: 16,
+  xl: 20,
   pill: 999,
 } as const;
 
@@ -137,6 +138,13 @@ export const shadows = {
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 14,
+    elevation: 6,
   },
 } as const;
 

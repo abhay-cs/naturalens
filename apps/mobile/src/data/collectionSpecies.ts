@@ -1,61 +1,114 @@
-export type SpeciesCategory = 'mammal' | 'bird' | 'insect' | 'flora' | 'reptile';
+import type { Species } from '../types';
 
-export interface CollectionSpecies {
-  id: string;
-  label: string;
-  category: SpeciesCategory;
-  imageUrl: string;
-  isFavorite: boolean;
-  capturedAt: number;
-}
-
-export const COLLECTION_SPECIES: CollectionSpecies[] = [
+export const SPECIES: Species[] = [
   {
     id: 'sp-1',
     label: 'Red Fox',
     category: 'mammal',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Vulpes_vulpes_laying_in_snow.jpg/440px-Vulpes_vulpes_laying_in_snow.jpg',
+    region: 'North America',
+    habitat: 'forest',
+    description: 'Red foxes are adaptable carnivores that thrive in forests, suburbs, and urban edges. They have a distinctive red coat, white-tipped tail, and are most active at dawn and dusk.',
+    observationGuide: 'Note time of day, whether alone or in a pair, and any den or prey behavior. Avoid approaching; observe from a distance.',
     isFavorite: true,
-    capturedAt: Date.now() - 86400000 * 1,
+    sightings: 12,
+    lastSeen: Date.now() - 86400000 * 1,
   },
   {
     id: 'sp-2',
     label: 'Mountain Bluebird',
     category: 'bird',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Mountain_Bluebird.jpg/440px-Mountain_Bluebird.jpg',
+    region: 'Western North America',
+    habitat: 'forest',
+    description: 'Mountain bluebirds are small thrushes with bright blue plumage (males) and gray-blue (females). They nest in tree cavities in open woodlands and meadows.',
+    observationGuide: 'Note habitat (meadow edge, fence line), perching or foraging behavior, and whether carrying nesting material.',
     isFavorite: false,
-    capturedAt: Date.now() - 86400000 * 2,
+    sightings: 5,
+    lastSeen: Date.now() - 86400000 * 2,
   },
   {
     id: 'sp-3',
     label: 'Monarch Butterfly',
     category: 'insect',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Monarch_In_May.jpg/440px-Monarch_In_May.jpg',
+    region: 'Americas',
+    habitat: 'wetland',
+    description: 'Monarchs are iconic orange-and-black butterflies that migrate long distances. They rely on milkweed for breeding and nectar plants for fuel.',
+    observationGuide: 'Note host plant (milkweed species if known), nectaring flowers, and direction of flight. Count if in migration.',
     isFavorite: false,
-    capturedAt: Date.now() - 86400000 * 3,
+    sightings: 8,
+    lastSeen: Date.now() - 86400000 * 3,
   },
   {
     id: 'sp-4',
     label: 'Sword Fern',
     category: 'flora',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Polystichum_munitum.jpg/440px-Polystichum_munitum.jpg',
+    region: 'Pacific Northwest',
+    habitat: 'forest',
+    description: 'Sword ferns are evergreen ferns with arching fronds and distinct pinnae. They form dense understory in moist coniferous and mixed forests.',
+    observationGuide: 'Note habitat (forest floor, slope, near water), frond condition, and any associated wildlife (salamanders, insects).',
     isFavorite: false,
-    capturedAt: Date.now() - 86400000 * 5,
+    sightings: 3,
+    lastSeen: Date.now() - 86400000 * 5,
   },
   {
     id: 'sp-5',
-    label: 'Green Turtle',
+    label: 'Green Sea Turtle',
     category: 'reptile',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Chelonia_mydas_%28Hawaiian_Green_Sea_Turtle%29_on_Papah%C4%81naumoku%C4%81kea.jpg/440px-Chelonia_mydas_%28Hawaiian_Green_Sea_Turtle%29_on_Papah%C4%81naumoku%C4%81kea.jpg',
+    region: 'Hawaiian Islands',
+    habitat: 'ocean',
+    description: 'Green sea turtles are large marine reptiles that graze on seagrass and algae. They nest on beaches and are often seen in shallow coastal waters.',
+    observationGuide: 'Note location (beach vs. water), behavior (basking, swimming, nesting), and keep distance to avoid disturbance.',
     isFavorite: false,
-    capturedAt: Date.now() - 86400000 * 7,
+    sightings: 2,
+    lastSeen: Date.now() - 86400000 * 7,
   },
   {
     id: 'sp-6',
     label: 'American Pika',
     category: 'mammal',
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Ochotona_princeps.jpg/440px-Ochotona_princeps.jpg',
+    region: 'Western North America',
+    habitat: 'forest',
+    description: 'Pikas are small mountain-dwelling mammals related to rabbits. They live in talus slopes and meadows at high elevation and gather hay for winter.',
+    observationGuide: 'Note elevation, habitat (talus, meadow), calling behavior, and hay piles. Sensitive to heat—note time and temperature.',
     isFavorite: true,
-    capturedAt: Date.now() - 86400000 * 10,
+    sightings: 4,
+    lastSeen: Date.now() - 86400000 * 10,
+  },
+  {
+    id: 'sp-7',
+    label: 'Waterbuck Deer',
+    category: 'mammal',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Waterbuck_%28Kobus_ellipsiprymnus%29_male_%2816831926985%29.jpg/440px-Waterbuck_%28Kobus_ellipsiprymnus%29_male_%2816831926985%29.jpg',
+    region: 'Saharan Africa',
+    habitat: 'wetland',
+    description: 'Waterbucks are large African antelopes that live near water in savannas and woodlands. They have a shaggy coat, a white rump ring, and graze calmly near water.',
+    observationGuide: 'Take a moment to note the animal\'s behavior, the time of the sighting, and any interaction with people or the environment.',
+    isFavorite: false,
+    sightings: 1,
+    lastSeen: Date.now() - 86400000 * 0,
+  },
+  {
+    id: 'sp-8',
+    label: 'Giraffe',
+    category: 'mammal',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Giraffe_Mikumi_National_Park.jpg/440px-Giraffe_Mikumi_National_Park.jpg',
+    region: 'East Africa',
+    habitat: 'forest',
+    description: 'Giraffes are tall savanna browsers with long necks and distinctive coat patterns. They feed on acacia and other trees in open woodlands.',
+    observationGuide: 'Note group size, feeding height, and whether calves are present. Record location and habitat type.',
+    isFavorite: true,
+    sightings: 6,
+    lastSeen: Date.now() - 86400000 * 1,
   },
 ];
+
+/** @deprecated Use SPECIES and Species type from types.ts */
+export type CollectionSpecies = Species;
+
+/** @deprecated Use SPECIES */
+export const COLLECTION_SPECIES = SPECIES;

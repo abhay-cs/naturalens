@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { StyleSheet, Text, View, Image, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
-import type { SpeciesCategory } from '../../data/collectionSpecies';
+import type { SpeciesCategory } from '../../types';
 
 const CATEGORY_STYLES: Record<SpeciesCategory, { bg: string; text: string; label: string }> = {
   mammal: { bg: 'rgba(74,124,89,0.12)', text: '#4A7C59', label: 'Mammal' },
