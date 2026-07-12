@@ -2,94 +2,59 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import type { Detection, FrameResults } from '../types';
+import type { Detection, HistoryEntry } from '../types';
+import { addHistoryEntry as persistHistoryEntry, loadHistory } from '../lib/history';
 
-export type TabId = 'camera' | 'media' | 'map';
+export type TabId = 'camera' | 'history';
 
 interface AppStateContextValue {
   activeTab: TabId;
   setActiveTab: (id: TabId) => void;
-  scoreThreshold: number;
-  setScoreThreshold: (v: number) => void;
-  showOnlyBears: boolean;
-  setShowOnlyBears: (v: boolean) => void;
   initError: string | null;
   setInitError: (v: string | null) => void;
-  filterDetections: (d: Detection[]) => Detection[];
-  detectorOptions: { scoreThreshold: number };
-  setFrameResults: (r: FrameResults | null) => void;
-  setVideoDetections: (d: Detection[] | null) => void;
-  setVideoFrameMeta: (m: { timestamp?: number; frameIndex?: number } | null) => void;
-  displayFrame: FrameResults | { detections?: Detection[]; timestamp?: number; frameIndex?: number } | null;
-  displayDetections: Detection[] | null;
+  history: HistoryEntry[];
+  historyLoading: boolean;
+  addHistoryEntry: (detection: Detection, photoUri: string) => Promise<void>;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<TabId>('camera');
-  const [scoreThreshold, setScoreThreshold] = useState(0.4);
-  const [showOnlyBears, setShowOnlyBears] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
-  const [frameResults, setFrameResults] = useState<FrameResults | null>(null);
-  const [videoDetections, setVideoDetections] = useState<Detection[] | null>(null);
-  const [videoFrameMeta, setVideoFrameMeta] = useState<{
-    timestamp?: number;
-    frameIndex?: number;
-  } | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
-  const filterDetections = useCallback(
-    (detections: Detection[]): Detection[] => {
-      let out = detections.filter((d) => d.score >= scoreThreshold);
-      if (showOnlyBears) {
-        out = out.filter((d) => d.label.toLowerCase() === 'bear');
-      }
-      return out;
+  useEffect(() => {
+    loadHistory()
+      .then(setHistory)
+      .finally(() => setHistoryLoading(false));
+  }, []);
+
+  const addHistoryEntry = useCallback(
+    async (detection: Detection, photoUri: string) => {
+      const entry = await persistHistoryEntry(detection, photoUri);
+      setHistory((prev) => [entry, ...prev]);
     },
-    [scoreThreshold, showOnlyBears]
+    []
   );
-
-  const detectorOptions = useMemo(() => ({ scoreThreshold }), [scoreThreshold]);
-
-  const displayFrame: AppStateContextValue['displayFrame'] =
-    activeTab === 'media' && videoDetections && videoFrameMeta
-      ? { detections: videoDetections, ...videoFrameMeta }
-      : frameResults ?? null;
-
-  const displayDetections = displayFrame?.detections ?? null;
 
   const value: AppStateContextValue = useMemo(
     () => ({
       activeTab,
       setActiveTab,
-      scoreThreshold,
-      setScoreThreshold,
-      showOnlyBears,
-      setShowOnlyBears,
       initError,
       setInitError,
-      filterDetections,
-      detectorOptions,
-      setFrameResults,
-      setVideoDetections,
-      setVideoFrameMeta,
-      displayFrame,
-      displayDetections,
+      history,
+      historyLoading,
+      addHistoryEntry,
     }),
-    [
-      activeTab,
-      scoreThreshold,
-      showOnlyBears,
-      initError,
-      filterDetections,
-      detectorOptions,
-      displayFrame,
-      displayDetections,
-    ]
+    [activeTab, initError, history, historyLoading, addHistoryEntry]
   );
 
   return (

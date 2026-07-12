@@ -38,6 +38,11 @@ env/
 *.savedmodel/
 *.mlmodel
 
+# ...except the classifier the mobile app bundles. Unlike training artifacts, this
+# one is a build input — Metro resolves it via require(), so the app won't build
+# without it.
+!apps/mobile/assets/model/*.tflite
+
 # Environment and secrets
 .env
 .env.*

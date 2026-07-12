@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../contexts/ThemeContext';
+import { Colors } from '../theme/colors';
 
 interface ErrorBannerProps {
   message: string;
@@ -8,23 +8,20 @@ interface ErrorBannerProps {
 }
 
 export function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
-  const { neo, neoShadow } = useTheme();
-
   return (
     <View
       style={[
         styles.container,
         {
           backgroundColor: 'rgba(239, 68, 68, 0.15)',
-          borderColor: neo.border,
+          borderColor: Colors.border,
           borderWidth: 2,
-          ...neoShadow,
         },
       ]}
     >
-      <Text style={[styles.text, { color: neo.error }]}>{message}</Text>
+      <Text style={[styles.text, { color: Colors.error }]}>{message}</Text>
       <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Ionicons name="close" size={20} color={neo.text} />
+        <Ionicons name="close" size={20} color={Colors.textPrimary} />
       </TouchableOpacity>
     </View>
   );

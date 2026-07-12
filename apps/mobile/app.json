@@ -39,7 +39,9 @@
           "cameraPermission": "Allow NaturaLens to access your camera"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "react-native-fast-tflite",
+      "expo-asset"
     ]
   }
 }
