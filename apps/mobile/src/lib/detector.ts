@@ -8,9 +8,17 @@ import type { Detection } from '../types';
  * with, so an on-device TFLite runtime would mean giving up the Expo Go workflow.
  */
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
-const MODEL = 'gemini-3.5-flash';
 
-/** Plenty of detail for identification, and keeps the upload small. */
+/**
+ * flash-lite over flash: measured ~1.5s vs ~7-18s per photo, with the same answer on
+ * test images. Naming an animal doesn't need the bigger model's reasoning.
+ */
+const MODEL = 'gemini-3.1-flash-lite';
+
+/**
+ * Gemini tokenizes images in fixed tiles, so going below this doesn't reduce input
+ * tokens or latency — it only costs detail. Measured: 512px bought nothing.
+ */
 const MAX_WIDTH = 1024;
 
 const PROMPT =
@@ -85,6 +93,9 @@ export async function detectInImage(photoUri: string): Promise<Detection[]> {
         { type: 'text', text: PROMPT },
         { type: 'image', data: image, mime_type: 'image/jpeg' },
       ],
+      // Gemini thinks by default; identifying an animal doesn't need it, and it was
+      // burning ~230 reasoning tokens of pure latency per photo.
+      generation_config: { thinking_level: 'minimal' },
       response_format: {
         type: 'text',
         mime_type: 'application/json',
