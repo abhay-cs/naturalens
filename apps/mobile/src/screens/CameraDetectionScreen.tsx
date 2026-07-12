@@ -177,7 +177,7 @@ export function CameraDetectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a3c40' },
+  container: { flex: 1, backgroundColor: Colors.brand },
   cameraBackground: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#3b6a75',
