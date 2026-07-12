@@ -1,109 +1,117 @@
-import { loadTensorflowModel, type TensorflowModel } from 'react-native-fast-tflite';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { File } from 'expo-file-system';
-import { decode as decodeJpeg } from 'jpeg-js';
 import type { Detection } from '../types';
-import LABELS from '../../assets/model/labels.json';
 
 /**
- * EfficientNet-Lite0, an ImageNet-1k classifier, running on-device via TFLite.
- * ImageNet covers a lot of wildlife (bear species, foxes, wolves, otter, skunk,
- * badger, many birds and reptiles), which is why it beats a generic label set here.
+ * Species identification via the Gemini API.
+ *
+ * Cloud rather than on-device: Expo Go can only load the native modules it ships
+ * with, so an on-device TFLite runtime would mean giving up the Expo Go workflow.
  */
-const INPUT_SIZE = 224;
+const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+const MODEL = 'gemini-3.5-flash';
 
-// Read from the model's own TFLite metadata (NormalizationOptions), not guessed.
-const MEAN = 127;
-const STD = 128;
+/** Plenty of detail for identification, and keeps the upload small. */
+const MAX_WIDTH = 1024;
 
-const TOP_K = 3;
+const PROMPT =
+  'Identify the animal in this photo. Give the most specific species name you can ' +
+  'reasonably support (for example "red fox" rather than "fox", "brown bear" rather ' +
+  'than "bear"), in plain English rather than Latin. Set confidence to how sure you ' +
+  'are, from 0 to 1. If there is no animal in the photo, set isAnimal to false.';
 
-let modelPromise: Promise<TensorflowModel> | null = null;
+const RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    isAnimal: { type: 'boolean' },
+    label: { type: 'string' },
+    confidence: { type: 'number' },
+  },
+  required: ['isAnimal', 'label', 'confidence'],
+};
 
-/** Loads the model once; every later capture reuses it. */
-function loadModel(): Promise<TensorflowModel> {
-  if (!modelPromise) {
-    // Empty delegate list = default CPU delegate.
-    modelPromise = loadTensorflowModel(
-      require('../../assets/model/efficientnet_lite0.tflite'),
-      []
+interface GeminiResult {
+  isAnimal: boolean;
+  label: string;
+  confidence: number;
+}
+
+/** Shrinks the capture and returns it base64-encoded for an inline upload. */
+async function toBase64Jpeg(photoUri: string): Promise<string> {
+  const rendered = await ImageManipulator.manipulate(photoUri)
+    .resize({ width: MAX_WIDTH })
+    .renderAsync();
+
+  const { base64 } = await rendered.saveAsync({
+    format: SaveFormat.JPEG,
+    compress: 0.8,
+    base64: true,
+  });
+
+  if (!base64) throw new Error('Could not encode the photo.');
+  return base64;
+}
+
+/** The generated text sits on the model_output step. */
+function extractText(body: any): string {
+  const step = body?.steps?.find((s: any) => s.type === 'model_output');
+  const text = step?.content?.find((c: any) => c.type === 'text')?.text;
+
+  if (typeof text !== 'string') {
+    throw new Error('Unexpected response from Gemini.');
+  }
+  return text;
+}
+
+/** Classifies a captured photo. Returns an empty list when there's no animal in frame. */
+export async function detectInImage(photoUri: string): Promise<Detection[]> {
+  const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'Missing EXPO_PUBLIC_GEMINI_API_KEY. Add it to apps/mobile/.env and restart the dev server.'
     );
   }
-  return modelPromise;
-}
 
-/**
- * Builds the model's input tensor from decoded pixels.
- *
- * jpeg-js gives us RGBA at whatever size the JPEG happens to be, so we drop the
- * alpha channel and nearest-neighbour resample to INPUT_SIZE as we normalize —
- * that way we don't depend on the resize upstream landing on exact dimensions.
- */
-function toInputTensor(
-  rgba: Uint8Array,
-  width: number,
-  height: number
-): Float32Array<ArrayBuffer> {
-  const input = new Float32Array(INPUT_SIZE * INPUT_SIZE * 3);
+  const image = await toBase64Jpeg(photoUri);
 
-  for (let y = 0; y < INPUT_SIZE; y++) {
-    const srcY = Math.min(height - 1, Math.floor((y * height) / INPUT_SIZE));
+  const response = await fetch(ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      input: [
+        { type: 'text', text: PROMPT },
+        { type: 'image', data: image, mime_type: 'image/jpeg' },
+      ],
+      response_format: {
+        type: 'text',
+        mime_type: 'application/json',
+        schema: RESPONSE_SCHEMA,
+      },
+    }),
+  });
 
-    for (let x = 0; x < INPUT_SIZE; x++) {
-      const srcX = Math.min(width - 1, Math.floor((x * width) / INPUT_SIZE));
-      const src = (srcY * width + srcX) * 4;
-      const dst = (y * INPUT_SIZE + x) * 3;
-
-      input[dst] = (rgba[src] - MEAN) / STD;
-      input[dst + 1] = (rgba[src + 1] - MEAN) / STD;
-      input[dst + 2] = (rgba[src + 2] - MEAN) / STD;
-    }
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Gemini request failed (${response.status}). ${detail.slice(0, 120)}`);
   }
 
-  return input;
-}
-
-/**
- * The output head may or may not already have softmax applied. Probabilities sum
- * to ~1, raw logits don't — so only apply softmax when it's actually needed.
- * The winning label is the same either way, but the confidence we show is not.
- */
-function toProbabilities(raw: Float32Array): Float32Array {
-  let sum = 0;
-  for (let i = 0; i < raw.length; i++) sum += raw[i];
-  if (Math.abs(sum - 1) < 0.01) return raw;
-
-  let max = -Infinity;
-  for (let i = 0; i < raw.length; i++) max = Math.max(max, raw[i]);
-
-  const out = new Float32Array(raw.length);
-  let expSum = 0;
-  for (let i = 0; i < raw.length; i++) {
-    out[i] = Math.exp(raw[i] - max);
-    expSum += out[i];
+  let result: GeminiResult;
+  try {
+    result = JSON.parse(extractText(await response.json()));
+  } catch {
+    throw new Error('Could not read the identification. Try again.');
   }
-  for (let i = 0; i < raw.length; i++) out[i] /= expSum;
 
-  return out;
-}
+  if (!result.isAnimal || !result.label) return [];
 
-/** Classifies a captured photo, returning the best guesses, most confident first. */
-export async function detectInImage(photoUri: string): Promise<Detection[]> {
-  const model = await loadModel();
-
-  const rendered = await ImageManipulator.manipulate(photoUri)
-    .resize({ width: INPUT_SIZE, height: INPUT_SIZE })
-    .renderAsync();
-  const resized = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 1 });
-
-  const jpeg = decodeJpeg(await new File(resized.uri).bytes(), { useTArray: true });
-  const input = toInputTensor(jpeg.data, jpeg.width, jpeg.height);
-
-  const outputs = await model.run([input.buffer]);
-  const scores = toProbabilities(new Float32Array(outputs[0]));
-
-  return Array.from(scores)
-    .map((score, i) => ({ label: LABELS[i] ?? `class ${i}`, score }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_K);
+  return [
+    {
+      label: result.label,
+      // Clamp: the model reports its own confidence, so don't trust the range blindly.
+      score: Math.min(1, Math.max(0, result.confidence ?? 0)),
+    },
+  ];
 }

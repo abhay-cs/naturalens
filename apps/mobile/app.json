@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mobileMVP"
+      "bundleIdentifier": "com.abhaycs.naturalens"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +27,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.mobileMVP"
+      "package": "com.abhaycs.naturalens"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,9 +39,7 @@
           "cameraPermission": "Allow NaturaLens to access your camera"
         }
       ],
-      "expo-font",
-      "react-native-fast-tflite",
-      "expo-asset"
+      "expo-font"
     ]
   }
 }
