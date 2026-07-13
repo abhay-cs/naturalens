@@ -5,7 +5,7 @@ import { Typography } from '../theme/spacing';
 interface ButtonProps {
   title: string;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary' | 'glass';
+  variant?: 'primary' | 'secondary' | 'glass' | 'danger';
   disabled?: boolean;
   style?: ViewStyle;
 }
@@ -24,6 +24,7 @@ export function Button({
         variant === 'primary' && styles.primary,
         variant === 'secondary' && styles.secondary,
         variant === 'glass' && styles.glass,
+        variant === 'danger' && styles.danger,
         disabled && styles.disabled,
         style,
       ]}
@@ -37,6 +38,7 @@ export function Button({
           variant === 'primary' && styles.textPrimary,
           variant === 'secondary' && styles.textSecondary,
           variant === 'glass' && styles.textGlass,
+          variant === 'danger' && styles.textDanger,
         ]}
       >
         {title}
@@ -60,9 +62,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   glass: { backgroundColor: Colors.white },
+  danger: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: Colors.error,
+  },
   disabled: { opacity: 0.6 },
   text: Typography.subtitle,
   textPrimary: { color: Colors.white },
   textSecondary: { color: Colors.primary },
   textGlass: { color: Colors.textPrimary },
+  textDanger: { color: Colors.error },
 });

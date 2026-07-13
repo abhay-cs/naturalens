@@ -1,5 +1,10 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import type { Detection } from '../types';
+import {
+  CONSERVATION_STATUSES,
+  type ConservationStatus,
+  type Detection,
+  type SpeciesInfo,
+} from '../types';
 
 /**
  * Species identification via the Gemini API.
@@ -21,23 +26,61 @@ const MODEL = 'gemini-3.1-flash-lite';
  */
 const MAX_WIDTH = 1024;
 
-const PROMPT =
+/**
+ * The species half of the answer, shared by both calls below: identifying a photo, and
+ * looking a species up by name. Same fields, same wording, one definition.
+ *
+ * Every field is output tokens, and output tokens are the whole latency cost — the four
+ * of them measured at ~230ms on top of a bare label. The length limits are load-bearing,
+ * not stylistic.
+ */
+const SPECIES_PROPERTIES = {
+  description: { type: 'string' },
+  habitat: { type: 'string' },
+  diet: { type: 'string' },
+  // Constrained rather than free text, so the badge can switch on it safely.
+  conservationStatus: { type: 'string', enum: CONSERVATION_STATUSES },
+};
+
+const SPECIES_FIELDS = ['description', 'habitat', 'diet', 'conservationStatus'];
+
+const SPECIES_INSTRUCTION =
+  'One or two sentences for description, and a short phrase each for habitat and diet — ' +
+  'a few words, not a sentence. Give its IUCN Red List status, or "Data Deficient" if you ' +
+  'are unsure.';
+
+const IDENTIFY_PROMPT =
   'Identify the animal in this photo. Give the most specific species name you can ' +
   'reasonably support (for example "red fox" rather than "fox", "brown bear" rather ' +
   'than "bear"), in plain English rather than Latin. Set confidence to how sure you ' +
-  'are, from 0 to 1. If there is no animal in the photo, set isAnimal to false.';
+  `are, from 0 to 1. Then describe the species. ${SPECIES_INSTRUCTION} ` +
+  'If there is no animal in the photo, set isAnimal to false and the rest will be ignored.';
 
-const RESPONSE_SCHEMA = {
+const IDENTIFY_SCHEMA = {
   type: 'object',
   properties: {
     isAnimal: { type: 'boolean' },
     label: { type: 'string' },
     confidence: { type: 'number' },
+    ...SPECIES_PROPERTIES,
   },
-  required: ['isAnimal', 'label', 'confidence'],
+  required: ['isAnimal', 'label', 'confidence', ...SPECIES_FIELDS],
 };
 
-interface GeminiResult {
+const SPECIES_SCHEMA = {
+  type: 'object',
+  properties: SPECIES_PROPERTIES,
+  required: SPECIES_FIELDS,
+};
+
+interface SpeciesResult {
+  description: string;
+  habitat: string;
+  diet: string;
+  conservationStatus: ConservationStatus;
+}
+
+interface IdentifyResult extends SpeciesResult {
   isAnimal: boolean;
   label: string;
   confidence: number;
@@ -70,16 +113,14 @@ function extractText(body: any): string {
   return text;
 }
 
-/** Classifies a captured photo. Returns an empty list when there's no animal in frame. */
-export async function detectInImage(photoUri: string): Promise<Detection[]> {
+/** One structured-JSON round trip. Both callers below differ only in input and schema. */
+async function askGemini<T>(input: unknown[], schema: object): Promise<T> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
       'Missing EXPO_PUBLIC_GEMINI_API_KEY. Add it to apps/mobile/.env and restart the dev server.'
     );
   }
-
-  const image = await toBase64Jpeg(photoUri);
 
   const response = await fetch(ENDPOINT, {
     method: 'POST',
@@ -89,17 +130,14 @@ export async function detectInImage(photoUri: string): Promise<Detection[]> {
     },
     body: JSON.stringify({
       model: MODEL,
-      input: [
-        { type: 'text', text: PROMPT },
-        { type: 'image', data: image, mime_type: 'image/jpeg' },
-      ],
-      // Gemini thinks by default; identifying an animal doesn't need it, and it was
-      // burning ~230 reasoning tokens of pure latency per photo.
+      input,
+      // Gemini thinks by default; naming an animal doesn't need it, and it was burning
+      // ~230 reasoning tokens of pure latency per photo.
       generation_config: { thinking_level: 'minimal' },
       response_format: {
         type: 'text',
         mime_type: 'application/json',
-        schema: RESPONSE_SCHEMA,
+        schema,
       },
     }),
   });
@@ -109,13 +147,41 @@ export async function detectInImage(photoUri: string): Promise<Detection[]> {
     throw new Error(`Gemini request failed (${response.status}). ${detail.slice(0, 120)}`);
   }
 
-  let result: GeminiResult;
   try {
-    result = JSON.parse(extractText(await response.json()));
+    return JSON.parse(extractText(await response.json()));
   } catch {
-    throw new Error('Could not read the identification. Try again.');
+    throw new Error('Could not read the response. Try again.');
   }
+}
 
+function toSpeciesInfo(result: SpeciesResult): SpeciesInfo {
+  return {
+    description: result.description,
+    habitat: result.habitat,
+    diet: result.diet,
+    // The schema constrains this, but it's a model — fall back rather than render a
+    // status the badge has no colour for.
+    conservationStatus: CONSERVATION_STATUSES.includes(result.conservationStatus)
+      ? result.conservationStatus
+      : 'Data Deficient',
+  };
+}
+
+/** Classifies a captured photo. Returns an empty list when there's no animal in frame. */
+export async function detectInImage(photoUri: string): Promise<Detection[]> {
+  const image = await toBase64Jpeg(photoUri);
+
+  const result = await askGemini<IdentifyResult>(
+    [
+      { type: 'text', text: IDENTIFY_PROMPT },
+      { type: 'image', data: image, mime_type: 'image/jpeg' },
+    ],
+    IDENTIFY_SCHEMA
+  );
+
+  // Shown a chair, the model fills in label "chair" with confidence 1 and describes the
+  // upholstery — isAnimal is the only thing that says it isn't a species. Trust it, and
+  // throw the rest away.
   if (!result.isAnimal || !result.label) return [];
 
   return [
@@ -123,6 +189,22 @@ export async function detectInImage(photoUri: string): Promise<Detection[]> {
       label: result.label,
       // Clamp: the model reports its own confidence, so don't trust the range blindly.
       score: Math.min(1, Math.max(0, result.confidence ?? 0)),
+      info: toSpeciesInfo(result),
     },
   ];
+}
+
+/**
+ * Looks a species up by name, with no photo.
+ *
+ * Species facts follow from the label, not the image — which is what makes finds saved
+ * before species info existed backfillable, where something like a location never could be.
+ */
+export async function fetchSpeciesInfo(label: string): Promise<SpeciesInfo> {
+  const result = await askGemini<SpeciesResult>(
+    [{ type: 'text', text: `Describe the animal species "${label}". ${SPECIES_INSTRUCTION}` }],
+    SPECIES_SCHEMA
+  );
+
+  return toSpeciesInfo(result);
 }
