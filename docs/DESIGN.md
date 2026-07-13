@@ -22,8 +22,16 @@ how confident it is, and keeps a log of what you've found.
 The MVP is one loop:
 
 1. **Capture** — open the camera, take a photo.
-2. **Identify** — send it off, get a species name and a confidence score back.
+2. **Identify** — the frame freezes on the still we actually analysed, and we name the
+   species, score our confidence, and say something about it.
 3. **Keep** — save the find; it persists across restarts and appears in a list.
+4. **Revisit** — tap a find to see it full-size with its species details, or delete it.
+
+Step 2 freezing is the point: an identification shown over a live camera feed is an
+identification of a frame the user can no longer see.
+
+Step 4 is what stops the list being a dead end. A find that can only ever be a 64px
+thumbnail isn't a discovery, it's a receipt.
 
 Everything else is roadmap.
 
@@ -34,6 +42,8 @@ Everything else is roadmap.
 - No bounding boxes. The model returns a label, not a location in the frame.
 - No offline mode. Identification is a network call and fails without one.
 - No map, and no video or image-file upload.
+- **No location.** Deliberate, but note it can't be backfilled: finds saved before location
+  is ever added will never have one.
 
 ---
 
@@ -49,7 +59,8 @@ Everything else is roadmap.
 │  AppStateContext ──> history.ts ──> AsyncStorage   │
 │         │                       └──> document dir  │
 │         v                                          │
-│  HistoryScreen                                     │
+│  HistoryScreen ──tap──> SpeciesDetailScreen        │
+│                              └──delete──> both     │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -92,43 +103,85 @@ before switching back.
 | Model | `gemini-3.1-flash-lite` | ~1.5s vs ~7–18s for `flash`, same answers on test images. Naming an animal doesn't need the bigger model's reasoning. |
 | Image width | 1024px | Gemini tokenizes images in fixed tiles, so going smaller costs detail without saving tokens or latency — 512px measurably bought nothing. |
 | Thinking | `minimal` | Default thinking burned ~230 reasoning tokens of pure latency per photo. |
-| Response | JSON schema | `{ isAnimal, label, confidence }` — structured output beats parsing prose. |
+| Response | JSON schema | `{ isAnimal, label, confidence, description, habitat, diet, conservationStatus }` — structured output beats parsing prose. |
 
 The prompt asks for the most specific species name the model can reasonably support ("red
-fox" rather than "fox") in plain English rather than Latin.
+fox" rather than "fox") in plain English rather than Latin, plus a sentence or two about the
+species and a short phrase each for habitat and diet.
 
-Two things about the result:
+Species info rides along on the **same call** — it is not a second request. Measured against
+the shipped 3-field schema on the same 1024px image, five interleaved runs each: **1454ms →
+1681ms median, so the extra four fields cost ~230ms (16%).** That was the number the decision
+hung on; the fallback, had it been worse, was to return the label immediately and fetch the
+details lazily when the detail view opens.
+
+`conservationStatus` is an **`enum` in the schema**, not free text, so `ConservationBadge` can
+switch on it and always have a colour. The code still falls back to `Data Deficient` for an
+off-list value — it's a model, not a database.
+
+Three things about the result:
 
 - **`isAnimal: false` returns an empty list, not an error.** A photo of a chair is a valid
-  answer.
+  answer, and the UI freezes on the still and says "No animal here".
+- **That guard is load-bearing.** Shown a chair, the model happily fills in `label: "chair"`,
+  `confidence: 1`, and a description of the upholstery. `!result.isAnimal` is the only thing
+  standing between that and "chair" being saved as a species.
 - **Confidence is self-reported** by the model, so it's clamped to `[0, 1]` rather than
   trusted. Treat it as a hint, not a calibrated probability.
 
-Together these decisions took a detection from ~9s to ~2s.
+The model, image size, and thinking budget together took a detection from ~9s to ~2s.
 
 ---
 
 ## 4. Persistence (`src/lib/history.ts`)
 
-Metadata (`id`, `label`, `score`, `photoUri`, `timestamp`) is JSON in AsyncStorage under a
-**versioned key** (`naturalens-history-v1`), so a future schema change can migrate rather
-than misread old rows. A corrupt read starts clean instead of crashing at launch.
+Metadata (`id`, `label`, `score`, `photoUri`, `timestamp`, `info?`) is JSON in AsyncStorage
+under a **versioned key** (`naturalens-history-v1`), so a future schema change can migrate
+rather than misread old rows. A corrupt read starts clean instead of crashing at launch.
 
 The photo is **copied out of the camera's cache directory into the document directory**.
 This is the subtle part: `expo-camera` writes captures to cache, which iOS and Android are
 free to purge under storage pressure — which would leave the history list full of broken
 thumbnails. The copy is what makes a saved find actually saved.
 
+It also means **`deleteHistoryEntry` has to delete the file, not just the row.** Nothing else
+will ever reclaim it; dropping the AsyncStorage row alone leaks the image for the life of the
+install.
+
+`SpeciesInfo` was added to `HistoryEntry` as an **optional** field rather than as a version
+bump. Additive means entries already on disk keep loading with no migration code at all. The
+version in the key is still there for a genuinely breaking change.
+
+Those older finds are then **backfilled lazily**: open one, and the detail view calls
+`fetchSpeciesInfo(label)` — a text-only Gemini call, no photo — and persists the result, so
+it's instant every time after. This works because **species facts follow from the label, not
+the image**, which is exactly what makes them recoverable where something like a capture
+location never would be. Doing it on open rather than as a bulk migration at launch means we
+only pay for finds someone actually looks at.
+
+The lookup degrades rather than lies: a junk label returns `Data Deficient` and a description
+saying so, instead of a confident-looking status for a species that doesn't exist. On a network
+failure the card offers a retry rather than silently re-hammering the API.
+
 ---
 
 ## 5. State
 
-`AppStateContext` holds what's shared: the active tab, the error banner, and the history
-list. React context with no state library is the right size for two screens.
+`AppStateContext` holds what's shared: the active tab, the error banner, the history list,
+and which find is open in the detail view. React context with no state library is the right
+size for this.
 
 The pending detection is deliberately **not** in there — it lives in
 `CameraDetectionScreen`'s local state, because nothing else needs to read it. It gets
 promoted to shared state only when the user saves it.
+
+The open find is stored as an **id**, and the entry is derived from `history`. That's what
+makes delete work without a special case: remove the row and `selectedEntry` becomes `null`
+on its own, so the detail view closes itself.
+
+Navigation is hand-rolled — there is no navigation library. The detail view is a React Native
+`<Modal>` rather than an absolute-fill `View`, because `onRequestClose` is what makes
+Android's hardware back button close the detail instead of backgrounding the app.
 
 ---
 
@@ -137,6 +190,9 @@ promoted to shared state only when the user saves it.
 - **Color** (`src/theme/colors.ts`) — `primary` (forest green) is the *action* color:
   buttons, active tab. `brand` (deep teal) is the *identity* color: logo, splash, camera
   surface. Keeping them apart is what stops the camera chrome from reading as a button.
+  `ConservationColors` maps IUCN status to a colour, safe to alarming. `Data Deficient` is
+  grey, not green — "we don't know" is not "it's fine", and colouring it like the latter
+  would be a lie told in a design token.
 - **Type** (`src/theme/spacing.ts`) — Figtree in three weights. Weight comes from the family
   name (`Figtree_700Bold`), never from `fontWeight`: a custom font exposes each weight as
   its own family and `fontWeight` can't choose between them. A token naming a fourth weight

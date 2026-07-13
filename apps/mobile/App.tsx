@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { useFonts, Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AppStateProvider } from './src/contexts/AppStateContext';
+import { AppStateProvider, useAppState } from './src/contexts/AppStateContext';
 import { MainLayout } from './src/layouts/MainLayout';
 import { BrandSplash } from './src/components/BrandSplash';
 import { Colors } from './src/theme/colors';
@@ -13,6 +13,7 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const [brandingDone, setBrandingDone] = useState(false);
+  const { activeTab } = useAppState();
 
   const [fontsLoaded] = useFonts({
     Figtree_400Regular,
@@ -31,11 +32,15 @@ function AppContent() {
     return <View style={{ flex: 1, backgroundColor: Colors.cardBackground }} />;
   }
 
+  // The camera runs full-bleed under the status bar, so dark icons disappear into the
+  // viewfinder. Everything else — the tan splash, History's white — needs them dark.
+  const overCamera = brandingDone && activeTab === 'camera';
+
   return (
     <>
       <MainLayout />
       {!brandingDone && <BrandSplash onDone={() => setBrandingDone(true)} />}
-      <StatusBar style="dark" />
+      <StatusBar style={overCamera ? 'light' : 'dark'} />
     </>
   );
 }

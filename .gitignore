@@ -68,6 +68,9 @@ coverage/
 .nyc_output/
 .pytest_cache/
 
+# Screenshots dropped in for review — useful to look at, not to version
+pics/
+
 # Misc
 *.tsbuildinfo
 .turbo/

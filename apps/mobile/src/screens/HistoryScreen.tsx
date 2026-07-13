@@ -3,88 +3,87 @@ import {
   Text,
   Image,
   StyleSheet,
-  SafeAreaView,
   FlatList,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
-import { Spacing, BorderRadii, Typography } from '../theme/spacing';
+import { Spacing, BorderRadii, Typography, NAV_HEIGHT } from '../theme/spacing';
 import { Card } from '../components/Card';
 import { useAppState } from '../contexts/AppStateContext';
+import { formatRelativeTime } from '../lib/time';
 import type { HistoryEntry } from '../types';
 
-const MINUTE = 60 * 1000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-
-function formatRelativeTime(timestamp: number): string {
-  const elapsed = Date.now() - timestamp;
-
-  if (elapsed < MINUTE) return 'Just now';
-  if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)}m ago`;
-  if (elapsed < DAY) return `${Math.floor(elapsed / HOUR)}h ago`;
-  if (elapsed < 2 * DAY) return 'Yesterday';
-
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function HistoryRow({ entry }: { entry: HistoryEntry }) {
+function HistoryRow({
+  entry,
+  onPress,
+}: {
+  entry: HistoryEntry;
+  onPress: () => void;
+}) {
   return (
-    <Card style={styles.row}>
-      <Image source={{ uri: entry.photoUri }} style={styles.thumbnail} />
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <Card style={styles.row}>
+        <Image source={{ uri: entry.photoUri }} style={styles.thumbnail} />
 
-      <View style={styles.rowText}>
-        <Text style={styles.label} numberOfLines={1}>
-          {entry.label}
-        </Text>
-        <Text style={styles.meta}>
-          {Math.round(entry.score * 100)}% · {formatRelativeTime(entry.timestamp)}
-        </Text>
-      </View>
-    </Card>
+        <View style={styles.rowText}>
+          <Text style={styles.label} numberOfLines={1}>
+            {entry.label}
+          </Text>
+          <Text style={styles.meta}>
+            {Math.round(entry.score * 100)}% · {formatRelativeTime(entry.timestamp)}
+          </Text>
+        </View>
+
+        <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+      </Card>
+    </TouchableOpacity>
   );
 }
 
 export function HistoryScreen() {
-  const { history, historyLoading } = useAppState();
+  const insets = useSafeAreaInsets();
+  const { history, historyLoading, setSelectedEntryId } = useAppState();
+
+  // The tab bar floats over the list, so the last row has to be scrolled clear of it by
+  // hand — otherwise it sits underneath and looks cut off.
+  const bottomClearance = insets.bottom + Spacing.l + NAV_HEIGHT + Spacing.m;
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Detections</Text>
-        </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Detections</Text>
+      </View>
 
-        {historyLoading ? (
-          <View style={styles.centerContent}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-          </View>
-        ) : (
-          <FlatList
-            data={history}
-            keyExtractor={(entry) => entry.id}
-            renderItem={({ item }) => <HistoryRow entry={item} />}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <View style={styles.centerContent}>
-                <Text style={styles.emptyText}>
-                  No animals detected yet — tap the camera tab to get started.
-                </Text>
-              </View>
-            }
-          />
-        )}
-      </SafeAreaView>
-    </View>
+      {historyLoading ? (
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={history}
+          keyExtractor={(entry) => entry.id}
+          renderItem={({ item }) => (
+            <HistoryRow entry={item} onPress={() => setSelectedEntryId(item.id)} />
+          )}
+          contentContainerStyle={[styles.listContent, { paddingBottom: bottomClearance }]}
+          ListEmptyComponent={
+            <View style={styles.centerContent}>
+              <Text style={styles.emptyText}>
+                No animals detected yet — tap the camera tab to get started.
+              </Text>
+            </View>
+          }
+        />
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  safeArea: { flex: 1 },
   header: {
     alignItems: 'center',
     paddingHorizontal: Spacing.l,
@@ -106,7 +105,6 @@ const styles = StyleSheet.create({
   listContent: {
     flexGrow: 1,
     paddingHorizontal: Spacing.l,
-    paddingBottom: Spacing.xxxl,
     gap: Spacing.m,
   },
   row: {

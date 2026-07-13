@@ -2,15 +2,16 @@ import { useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Colors } from '../theme/colors';
-import { Typography } from '../theme/spacing';
+import { Spacing, BorderRadii, Typography, NAV_HEIGHT } from '../theme/spacing';
 import { Button } from '../components/Button';
 import { ConfidenceIndicator } from '../components/ConfidenceIndicator';
 import { useAppState } from '../contexts/AppStateContext';
@@ -18,6 +19,7 @@ import { detectInImage } from '../lib/detector';
 import type { Detection } from '../types';
 
 export function CameraDetectionScreen() {
+  const insets = useSafeAreaInsets();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraReady, setCameraReady] = useState(false);
@@ -29,6 +31,13 @@ export function CameraDetectionScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   const { setInitError, addHistoryEntry, setActiveTab } = useAppState();
+
+  // A photo is on screen, identified or not. The camera is frozen behind it either way.
+  const hasResult = photoUri !== null;
+
+  // The screen runs full-bleed under the floating tab bar, so anything we put at the bottom
+  // has to clear the bar itself — there's no layout flow to do it for us.
+  const bottomClearance = insets.bottom + Spacing.l + NAV_HEIGHT + Spacing.m;
 
   const captureAndDetect = useCallback(async () => {
     if (!cameraRef.current || !cameraReady || capturing) return;
@@ -48,6 +57,8 @@ export function CameraDetectionScreen() {
 
       const results = await detectInImage(photo.uri);
 
+      // An empty result means "no animal here", which is an answer, not a failure — so we
+      // still freeze on the photo and let the user see what we looked at.
       setDetection(results[0] ?? null);
       setPhotoUri(photo.uri);
     } catch (err) {
@@ -60,6 +71,12 @@ export function CameraDetectionScreen() {
       setCapturing(false);
     }
   }, [cameraReady, capturing, setInitError]);
+
+  const retake = useCallback(() => {
+    setDetection(null);
+    setPhotoUri(null);
+    setInitError(null);
+  }, [setInitError]);
 
   const saveDiscovery = useCallback(async () => {
     if (!detection || !photoUri || saving) return;
@@ -114,80 +131,96 @@ export function CameraDetectionScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.cameraBackground}>
-        <CameraView
-          ref={cameraRef}
-          style={StyleSheet.absoluteFill}
-          facing="back"
-          onCameraReady={() => setCameraReady(true)}
-        />
-      </View>
+      <CameraView
+        ref={cameraRef}
+        style={StyleSheet.absoluteFill}
+        facing="back"
+        onCameraReady={() => setCameraReady(true)}
+      />
 
+      {/* The frame we actually identified, held still over the live preview. */}
+      {photoUri && (
+        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      )}
+
+      {/* Only while the camera is warming up — there's nothing else on screen to look at
+          yet. The identify wait is signalled in the shutter instead, so it doesn't dim the
+          viewfinder the user is still framing with. */}
       {!cameraReady && (
-        <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]} pointerEvents="none">
+        <View style={[StyleSheet.absoluteFill, styles.warmup]} pointerEvents="none">
           <ActivityIndicator size="large" color={Colors.white} />
         </View>
       )}
 
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Camera Detection</Text>
-        </View>
+      {!hasResult && (
+        <View style={[styles.shutterWrap, { bottom: bottomClearance }]} pointerEvents="box-none">
+          <Text style={styles.hint}>
+            {capturing ? 'Identifying…' : 'Point at an animal'}
+          </Text>
 
-        <View style={styles.fabWrap} pointerEvents="box-none">
           <TouchableOpacity
-            style={[styles.fab, capturing && styles.fabDisabled]}
+            style={styles.shutter}
             onPress={captureAndDetect}
             disabled={!cameraReady || capturing}
             activeOpacity={0.9}
           >
             {capturing ? (
-              <ActivityIndicator color={Colors.textPrimary} size="small" />
+              <ActivityIndicator color={Colors.textPrimary} />
             ) : (
-              <View style={styles.fabInner} />
+              <View style={styles.shutterInner} />
             )}
           </TouchableOpacity>
         </View>
+      )}
 
-        <View style={styles.bottomSheetWrapper}>
-          <View style={styles.bottomSheet}>
-            <Text style={styles.detectionTitle}>{detection?.label ?? '—'}</Text>
-            <Text style={styles.detectionSubtitle}>
-              {detection ? 'detected' : 'Ready to scan'}
-            </Text>
-
-            {detection && (
+      {hasResult && (
+        <View style={[styles.sheetWrap, { bottom: bottomClearance }]} pointerEvents="box-none">
+          <View style={styles.sheet}>
+            {detection ? (
               <>
+                <Text style={styles.species}>{detection.label}</Text>
+                <Text style={styles.description} numberOfLines={3}>
+                  {detection.info.description}
+                </Text>
+
                 <View style={styles.confidenceWrap}>
                   <ConfidenceIndicator score={Math.round(detection.score * 100)} />
                 </View>
+
                 <Button
                   title={saving ? 'Saving…' : 'Save Discovery'}
                   variant="glass"
                   onPress={saveDiscovery}
                   disabled={saving}
-                  style={styles.actionButton}
+                  style={styles.save}
                 />
               </>
+            ) : (
+              <>
+                <Text style={styles.species}>No animal here</Text>
+                <Text style={styles.description}>
+                  Nothing we could identify in this photo.
+                </Text>
+              </>
             )}
+
+            <TouchableOpacity onPress={retake} disabled={saving} style={styles.retake}>
+              <Text style={styles.retakeText}>Retake</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.brand },
-  cameraBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#3b6a75',
-  },
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingOverlay: {
+  warmup: {
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
@@ -196,65 +229,71 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.white,
     textAlign: 'center',
-    padding: 24,
+    padding: Spacing.l,
   },
-  cta: { marginTop: 8 },
-  safeArea: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  header: {
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
-  headerTitle: {
-    ...Typography.subtitle,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.white,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  fabWrap: {
+  cta: { marginTop: Spacing.s },
+
+  shutterWrap: {
     position: 'absolute',
-    bottom: 200,
     left: 0,
     right: 0,
     alignItems: 'center',
+    gap: Spacing.m,
   },
-  fab: {
+  hint: {
+    ...Typography.subtitle,
+    color: Colors.white,
+    opacity: 0.7,
+    // The viewfinder is whatever the user is pointing at, so white text alone isn't safe.
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowRadius: 6,
+  },
+  shutter: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.white,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderWidth: 3,
+    borderColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  fabDisabled: { opacity: 0.6 },
-  fabInner: {
+  shutterInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: Colors.white,
   },
-  bottomSheetWrapper: { padding: 24, paddingBottom: 40 },
-  bottomSheet: {
+
+  sheetWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacing.l,
+  },
+  sheet: {
     backgroundColor: 'rgba(5, 30, 25, 0.85)',
-    borderRadius: 32,
-    padding: 32,
+    borderRadius: BorderRadii.large,
+    padding: Spacing.l,
     alignItems: 'center',
   },
-  detectionTitle: {
-    ...Typography.h1,
+  species: {
+    ...Typography.h2,
     color: Colors.white,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
     textAlign: 'center',
   },
-  detectionSubtitle: {
-    ...Typography.body,
+  description: {
+    ...Typography.caption,
     color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
   },
-  confidenceWrap: { marginTop: 16, marginBottom: 24 },
-  actionButton: { width: '100%' },
+  confidenceWrap: { marginTop: Spacing.m, marginBottom: Spacing.l },
+  save: { width: '100%' },
+  retake: { paddingVertical: Spacing.s, marginTop: Spacing.xs },
+  retakeText: {
+    ...Typography.subtitle,
+    color: Colors.white,
+    opacity: 0.8,
+  },
 });
