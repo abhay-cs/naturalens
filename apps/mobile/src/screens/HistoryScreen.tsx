@@ -26,7 +26,11 @@ function HistoryRow({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
       <Card style={styles.row}>
-        <Image source={{ uri: entry.photoUri }} style={styles.thumbnail} />
+        {/* Falls back to the full photo only until the thumbnail backfill reaches this row. */}
+        <Image
+          source={{ uri: entry.thumbUri ?? entry.photoUri }}
+          style={styles.thumbnail}
+        />
 
         <View style={styles.rowText}>
           <Text style={styles.label} numberOfLines={1}>

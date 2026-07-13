@@ -12,6 +12,7 @@ import {
   addHistoryEntry as persistHistoryEntry,
   deleteHistoryEntry as persistDeleteHistoryEntry,
   setHistoryEntryInfo,
+  ensureThumbnail,
   loadHistory,
 } from '../lib/history';
 import { fetchSpeciesInfo } from '../lib/detector';
@@ -44,9 +45,40 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadHistory()
-      .then(setHistory)
-      .finally(() => setHistoryLoading(false));
+    let cancelled = false;
+
+    async function load() {
+      const entries = await loadHistory().catch(() => [] as HistoryEntry[]);
+      if (cancelled) return;
+
+      setHistory(entries);
+      setHistoryLoading(false);
+
+      // Finds saved before thumbnails existed still point the list at their full-size photo,
+      // so they're exactly the rows that are slow. Give them one, in the background.
+      //
+      // Sequentially, and deliberately so: this is image decoding, and firing twenty at once
+      // is how you run out of memory doing the thing that was supposed to save it.
+      for (const entry of entries) {
+        if (cancelled) return;
+        if (entry.thumbUri) continue;
+
+        try {
+          const updated = await ensureThumbnail(entry);
+          if (updated && !cancelled) {
+            setHistory((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+          }
+        } catch {
+          // Leave the row pointing at the full photo. Slow beats blank.
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const addHistoryEntry = useCallback(

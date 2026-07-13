@@ -113,6 +113,29 @@ function extractText(body: any): string {
   return text;
 }
 
+/**
+ * Turns an API failure into a sentence the user can act on.
+ *
+ * Whatever we throw here lands verbatim in the error banner via setInitError — the message
+ * *is* the UI copy, so it can't be a status code and a slice of someone's JSON.
+ *
+ * The 400 case is the fiddly one, and worth the check: a bad key returns 400 ("API key not
+ * valid"), but so does a request we've malformed ourselves. Mapping every 400 to "bad key"
+ * would blame the user's key for our bug.
+ */
+function messageForStatus(status: number, detail: string): string {
+  if (status === 429) {
+    return 'Too many photos too quickly — wait a moment and try again.';
+  }
+  if (status === 403 || (status === 400 && /api key/i.test(detail))) {
+    return 'Your Gemini API key was rejected. Check apps/mobile/.env.';
+  }
+  if (status >= 500) {
+    return 'Gemini is having trouble right now. Try again in a moment.';
+  }
+  return "Couldn't identify that photo. Try again.";
+}
+
 /** One structured-JSON round trip. Both callers below differ only in input and schema. */
 async function askGemini<T>(input: unknown[], schema: object): Promise<T> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -122,7 +145,7 @@ async function askGemini<T>(input: unknown[], schema: object): Promise<T> {
     );
   }
 
-  const response = await fetch(ENDPOINT, {
+  const request = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -140,11 +163,22 @@ async function askGemini<T>(input: unknown[], schema: object): Promise<T> {
         schema,
       },
     }),
-  });
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(ENDPOINT, request);
+  } catch {
+    // fetch only rejects on a network-level failure — a 4xx or 5xx still resolves. So
+    // anything landing here means the request never made it off the phone.
+    throw new Error("You're offline. Connect and try again.");
+  }
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    throw new Error(`Gemini request failed (${response.status}). ${detail.slice(0, 120)}`);
+    // The user gets a sentence; the developer gets what actually happened.
+    console.warn(`[detector] Gemini ${response.status}: ${detail.slice(0, 300)}`);
+    throw new Error(messageForStatus(response.status, detail));
   }
 
   try {

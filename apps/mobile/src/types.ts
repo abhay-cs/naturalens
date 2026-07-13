@@ -38,4 +38,9 @@ export interface HistoryEntry {
   timestamp: number;
   /** Absent on finds saved before species info existed — render without it. */
   info?: SpeciesInfo;
+  /**
+   * Small copy for the history list. Absent on finds saved before it existed, and
+   * backfilled on load — until then the row falls back to the full photo.
+   */
+  thumbUri?: string;
 }

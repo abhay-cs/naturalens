@@ -135,22 +135,42 @@ The model, image size, and thinking budget together took a detection from ~9s to
 
 ## 4. Persistence (`src/lib/history.ts`)
 
-Metadata (`id`, `label`, `score`, `photoUri`, `timestamp`, `info?`) is JSON in AsyncStorage
-under a **versioned key** (`naturalens-history-v1`), so a future schema change can migrate
-rather than misread old rows. A corrupt read starts clean instead of crashing at launch.
+Metadata (`id`, `label`, `score`, `photoUri`, `thumbUri?`, `timestamp`, `info?`) is JSON in
+AsyncStorage under a **versioned key** (`naturalens-history-v1`), so a future schema change
+can migrate rather than misread old rows. A corrupt read starts clean instead of crashing at
+launch.
 
-The photo is **copied out of the camera's cache directory into the document directory**.
-This is the subtle part: `expo-camera` writes captures to cache, which iOS and Android are
-free to purge under storage pressure — which would leave the history list full of broken
-thumbnails. The copy is what makes a saved find actually saved.
+The images are **written into the document directory, not the camera's cache**. `expo-camera`
+writes captures to cache, which iOS and Android are free to purge under storage pressure —
+which would leave the history list full of broken thumbnails. That copy is what makes a saved
+find actually saved.
 
-It also means **`deleteHistoryEntry` has to delete the file, not just the row.** Nothing else
-will ever reclaim it; dropping the AsyncStorage row alone leaks the image for the life of the
-install.
+**We keep two sizes, and neither is the original** (`DISPLAY_WIDTH` 1600px, `THUMB_WIDTH`
+256px):
 
-`SpeciesInfo` was added to `HistoryEntry` as an **optional** field rather than as a version
-bump. Additive means entries already on disk keep loading with no migration code at all. The
-version in the key is still there for a genuinely breaking change.
+| File | Used by |
+|---|---|
+| `history/{id}.jpg` | `SpeciesDetailScreen`, which renders it 360px tall |
+| `history/{id}_thumb.jpg` | `HistoryScreen` rows, 64pt squares |
+
+`takePictureAsync` returns whatever the sensor gives, around 4032px wide. The detector never
+uploads more than 1024px and the detail view never shows more than 360px tall, so the original
+is megabytes of pixels nothing will ever look at. It was also what the **list** was decoding —
+a ~48MB bitmap per row, to fill a 64pt square. That cost grew with every photo taken and would
+have OOM'd a low-end Android.
+
+So **`deleteHistoryEntry` has to delete the files, not just the row** — and there are two of
+them now. Nothing else will ever reclaim them; dropping the AsyncStorage row alone leaks both
+for the life of the install.
+
+Both `SpeciesInfo` and `thumbUri` were added to `HistoryEntry` as **optional** fields rather
+than as version bumps. Additive means entries already on disk keep loading with no migration
+code at all. The version in the key is still there for a genuinely breaking change.
+
+`thumbUri` is backfilled from the full photo on load, in `AppStateContext` — **sequentially**,
+because this is image decoding and firing twenty at once is how you run out of memory doing
+the thing that was supposed to save it. Their full-size originals are left alone: rewriting a
+file the user already has is a worse risk than leaving some disk on the floor.
 
 Those older finds are then **backfilled lazily**: open one, and the detail view calls
 `fetchSpeciesInfo(label)` — a text-only Gemini call, no photo — and persists the result, so
@@ -182,6 +202,39 @@ on its own, so the detail view closes itself.
 Navigation is hand-rolled — there is no navigation library. The detail view is a React Native
 `<Modal>` rather than an absolute-fill `View`, because `onRequestClose` is what makes
 Android's hardware back button close the detail instead of backgrounding the app.
+
+---
+
+## 5a. Errors
+
+An error thrown in `detector.ts` reaches the user's eyes. `CameraDetectionScreen` catches it,
+passes `err.message` to `setInitError`, and `ErrorBanner` renders that string — so **the
+message is the UI copy**, not a log line. It cannot be a status code and a slice of someone
+else's JSON.
+
+`askGemini` maps failures to sentences (`messageForStatus`), and `console.warn`s the real
+status and body so it stays debuggable:
+
+| Failure | What the user reads |
+|---|---|
+| `fetch` rejects | "You're offline. Connect and try again." |
+| 429 | "Too many photos too quickly — wait a moment and try again." |
+| 403, or 400 with "api key" in the body | "Your Gemini API key was rejected." |
+| 5xx | "Gemini is having trouble right now." |
+| anything else | "Couldn't identify that photo. Try again." |
+
+Two of those rules are load-bearing and were checked against the live API rather than guessed:
+
+- **A 400 does not by itself mean a bad key.** A bad key returns 400 (`"API key not valid"`),
+  but so does a request we have malformed ourselves. Mapping every 400 to "bad key" would
+  blame the user's key for our bug — hence the body check. (An *empty* key returns 403, though
+  `askGemini` catches that before it can leave the phone.)
+- **`fetch` only rejects on a network-level failure.** A 4xx or 5xx *resolves*. So anything
+  landing in the `catch` around it means the request never made it off the device, which is
+  what makes "you're offline" a safe thing to say there.
+
+Free-tier rate limits are tight, so 429 is a routine outcome of tapping the shutter a few
+times — not an edge case.
 
 ---
 
