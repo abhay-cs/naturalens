@@ -9,5 +9,4 @@ export const Colors = {
   white: '#ffffff',
   border: '#e0e0e0',
   error: '#dc2626',
-  accentAlt: '#facc15', // yellow accent for onboarding
 };

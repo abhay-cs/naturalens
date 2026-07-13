@@ -1,5 +1,6 @@
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Colors } from '../theme/colors';
+import { Typography } from '../theme/spacing';
 
 interface ButtonProps {
   title: string;
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   },
   glass: { backgroundColor: Colors.white },
   disabled: { opacity: 0.6 },
-  text: { fontSize: 16, fontWeight: '600' },
+  text: Typography.subtitle,
   textPrimary: { color: Colors.white },
   textSecondary: { color: Colors.primary },
   textGlass: { color: Colors.textPrimary },

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
+import { Typography } from '../theme/spacing';
 
 interface ErrorBannerProps {
   message: string;
@@ -37,5 +38,5 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 12,
   },
-  text: { flex: 1, fontSize: 14, fontFamily: 'Figtree_400Regular' },
+  text: { ...Typography.caption, flex: 1 },
 });

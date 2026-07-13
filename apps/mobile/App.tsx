@@ -20,8 +20,8 @@ function AppContent() {
     Figtree_700Bold,
   });
 
-  // Hold the native splash until the fonts are in, so the wordmark never renders
-  // in a fallback face and then snap to Figtree.
+  // Hold the native splash until the fonts are in, so no screen renders in the system
+  // face and then snaps to Figtree. These three weights are the ones Typography names.
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);

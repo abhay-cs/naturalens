@@ -15,11 +15,15 @@ export const BorderRadii = {
   pill: 999,
 };
 
+// Weight comes from the family, not fontWeight: a custom font exposes each weight as its
+// own family, and fontWeight can't pick between them (it silently no-ops on Android). The
+// three families here are the three loaded in App.tsx — adding a token with a fourth weight
+// means loading that weight too, or it falls back to the system face.
 export const Typography = {
-  h1: { fontSize: 32, fontWeight: 'bold' as const, lineHeight: 40 },
-  h2: { fontSize: 24, fontWeight: 'bold' as const, lineHeight: 32 },
-  h3: { fontSize: 18, fontWeight: '600' as const, lineHeight: 26 },
-  subtitle: { fontSize: 16, fontWeight: '500' as const, lineHeight: 24 },
-  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
-  caption: { fontSize: 14, fontWeight: '400' as const, lineHeight: 20 },
+  h1: { fontFamily: 'Figtree_700Bold', fontSize: 32, lineHeight: 40 },
+  h2: { fontFamily: 'Figtree_700Bold', fontSize: 24, lineHeight: 32 },
+  h3: { fontFamily: 'Figtree_600SemiBold', fontSize: 18, lineHeight: 26 },
+  subtitle: { fontFamily: 'Figtree_600SemiBold', fontSize: 16, lineHeight: 24 },
+  body: { fontFamily: 'Figtree_400Regular', fontSize: 16, lineHeight: 24 },
+  caption: { fontFamily: 'Figtree_400Regular', fontSize: 14, lineHeight: 20 },
 };

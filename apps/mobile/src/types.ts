@@ -1,4 +1,4 @@
-/** A single label guess from the on-device classifier. */
+/** A single label guess from the classifier. */
 export interface Detection {
   label: string;
   /** Confidence, 0 to 1. */

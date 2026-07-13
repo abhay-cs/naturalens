@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Colors } from '../theme/colors';
+import { Typography } from '../theme/spacing';
 import { Button } from '../components/Button';
 import { ConfidenceIndicator } from '../components/ConfidenceIndicator';
 import { useAppState } from '../contexts/AppStateContext';
@@ -192,9 +193,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   message: {
+    ...Typography.body,
     color: Colors.white,
     textAlign: 'center',
-    fontSize: 16,
     padding: 24,
   },
   cta: { marginTop: 8 },
@@ -208,8 +209,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.subtitle,
     color: Colors.textPrimary,
     backgroundColor: Colors.white,
     paddingHorizontal: 16,
@@ -246,14 +246,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detectionTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    ...Typography.h1,
     color: Colors.white,
     marginBottom: 4,
     textAlign: 'center',
   },
   detectionSubtitle: {
-    fontSize: 16,
+    ...Typography.body,
     color: 'rgba(255,255,255,0.7)',
   },
   confidenceWrap: { marginTop: 16, marginBottom: 24 },
