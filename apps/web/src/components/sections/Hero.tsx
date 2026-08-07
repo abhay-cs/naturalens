@@ -3,36 +3,86 @@
 import React from "react";
 import { Button } from "../ui/Button";
 import { motion } from "framer-motion";
+import Link from "next/link";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export function HeroSection() {
-    return (
-        <section className="relative pt-40 pb-20 px-6 overflow-hidden flex flex-col items-center justify-center text-center">
-            {/* Background Decor */}
-            <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-wild-amber/10 blur-[120px] rounded-full pointer-events-none" />
+  return (
+    <section className="relative overflow-hidden px-6 pb-16 pt-28 md:pb-24 md:pt-36">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 md:grid-cols-12 md:gap-8">
+        <div className="md:col-span-7">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0 }}
+            className="mb-8 flex items-center gap-4"
+          >
+            <span className="h-px w-10 bg-ink/30" aria-hidden />
+            <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-lichen">
+              Field Guide / Edition 001
+            </span>
+          </motion.div>
 
-            <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="max-w-4xl mx-auto z-10"
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease, delay: 0.08 }}
+            className="text-display text-ink"
+          >
+            See the{" "}
+            <em className="font-display italic text-ochre [font-variation-settings:'WONK'_1,'SOFT'_50]">
+              wild
+            </em>
+            <br />
+            differently
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.16 }}
+            className="mt-8 max-w-[42ch] text-lg leading-relaxed text-lichen md:text-xl"
+          >
+            Point your phone at an animal. Naturalens names the species and
+            keeps a quiet log of what you find.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.24 }}
+            className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+          >
+            <Link href="#access">
+              <Button variant="primary" size="lg">
+                Request access
+              </Button>
+            </Link>
+            <Link
+              href="#specimen"
+              className="font-mono text-[11px] uppercase tracking-[0.16em] text-lichen transition-colors hover:text-ink"
             >
-                <h1 className="text-5xl md:text-7xl font-extrabold text-wild-dark tracking-tight mb-6 leading-tight">
-                    See the <span className="text-wild-gray opacity-80 mix-blend-multiply">Wild</span> Differently
-                </h1>
+              View specimen record
+            </Link>
+          </motion.div>
+        </div>
 
-                <p className="text-lg md:text-xl text-wild-gray max-w-2xl mx-auto mb-10 leading-relaxed font-medium bg-wild-gray/10 px-4 py-2 rounded-lg inline-block mix-blend-multiply">
-                    AI-powered species recognition in real time. A quiet intelligence for curious observers.
-                </p>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                        Get Early Access
-                    </Button>
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto px-10">
-                        Watch Demo
-                    </Button>
-                </div>
-            </motion.div>
-        </section>
-    );
+        <motion.aside
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.9, ease, delay: 0.32 }}
+          className="relative hidden items-start justify-end md:col-span-5 md:flex"
+          aria-hidden
+        >
+          <div className="mt-16 flex items-start gap-4">
+            <span className="mt-1 h-28 w-px bg-rule" />
+            <p className="w-[11rem] -rotate-90 origin-top-left translate-x-5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-lichen">
+              Plate 01 · Ailuropoda melanoleuca · Sichuan
+            </p>
+          </div>
+        </motion.aside>
+      </div>
+    </section>
+  );
 }

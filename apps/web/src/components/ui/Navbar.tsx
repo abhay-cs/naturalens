@@ -1,54 +1,64 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button } from "./Button";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 export function Navbar() {
-    const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-        };
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 12);
+    };
 
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-    return (
-        <motion.header
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`fixed top-6 left-1/2 z-50 -translate-x-1/2 w-[90%] max-w-4xl transition-all duration-300 ${scrolled ? "bg-white/80 backdrop-blur-md shadow-sm border border-black/5" : "bg-white shadow-sm border border-black/5"
-                } rounded-full`}
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-[border-color,background-color] duration-300 ${
+        scrolled
+          ? "bg-paper/90 backdrop-blur-sm border-b border-rule"
+          : "bg-transparent border-b border-transparent"
+      }`}
+    >
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <Link
+          href="/"
+          className="font-display text-xl tracking-tight text-ink md:text-2xl"
         >
-            <div className="flex items-center justify-between px-6 py-3">
-                {/* Logo */}
-                <Link href="/" className="text-xl font-bold tracking-tight text-wild-dark">
-                    Wild ID
-                </Link>
+          Naturalens
+        </Link>
 
-                {/* Links */}
-                <nav className="hidden md:flex items-center gap-8">
-                    <Link href="#product" className="text-wild-gray hover:text-wild-dark font-medium transition-colors">
-                        Product
-                    </Link>
-                    <Link href="#how-it-works" className="text-wild-gray hover:text-wild-dark font-medium transition-colors">
-                        How It Works
-                    </Link>
-                    <Link href="#conservation" className="text-wild-gray hover:text-wild-dark font-medium transition-colors">
-                        Conservation
-                    </Link>
-                </nav>
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+          <Link
+            href="#specimen"
+            className="font-mono text-[11px] uppercase tracking-[0.16em] text-lichen transition-colors hover:text-ink"
+          >
+            Specimen
+          </Link>
+          <Link
+            href="#method"
+            className="font-mono text-[11px] uppercase tracking-[0.16em] text-lichen transition-colors hover:text-ink"
+          >
+            Method
+          </Link>
+          <Link
+            href="#ledger"
+            className="font-mono text-[11px] uppercase tracking-[0.16em] text-lichen transition-colors hover:text-ink"
+          >
+            Ledger
+          </Link>
+        </nav>
 
-                {/* CTA */}
-                <Button variant="primary" size="sm" className="hidden md:inline-flex px-6">
-                    Early Access
-                </Button>
-            </div>
-        </motion.header>
-    );
+        <Link
+          href="#access"
+          className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink transition-colors hover:text-ochre"
+        >
+          Request access
+        </Link>
+      </div>
+    </header>
+  );
 }
