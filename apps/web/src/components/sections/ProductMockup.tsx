@@ -2,7 +2,6 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { MapPin, Fingerprint, ScanLine, Activity, Bird, Rabbit, Turtle, Snail } from "lucide-react";
 
 export function ProductMockup() {
     const barcodeWidths = [
@@ -35,20 +34,6 @@ export function ProductMockup() {
                             <path d="M -50 214 L 650 354" fill="none" stroke="#a08b6c" strokeWidth="20" />
                             <path d="M -50 232 L 650 372" fill="none" stroke="#cfa668" strokeWidth="20" />
                         </svg>
-
-                        {/* Animal Silhouettes (Noun Project style - Large, Filled) nestled on the bands */}
-                        <div className="absolute top-[5%] left-[50%] text-[#1a3c24] opacity-20 -rotate-12">
-                            <Bird size={120} fill="currentColor" strokeWidth={0} />
-                        </div>
-                        <div className="absolute top-[25%] left-[75%] text-[#1a3c24] opacity-20 rotate-12">
-                            <Rabbit size={100} fill="currentColor" strokeWidth={0} />
-                        </div>
-                        <div className="absolute top-[45%] left-[88%] text-[#1a3c24] opacity-20 -rotate-6">
-                            <Turtle size={90} fill="currentColor" strokeWidth={0} />
-                        </div>
-                        <div className="absolute top-[60%] left-[65%] text-[#1a3c24] opacity-20 rotate-6">
-                            <Snail size={80} fill="currentColor" strokeWidth={0} />
-                        </div>
                     </div>
 
                     {/* Top Half Area */}
@@ -64,10 +49,10 @@ export function ProductMockup() {
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2">
                                     <h2
-                                        className="text-[3.5rem] text-[#2c61aa] tracking-tighter leading-none m-0"
+                                        className="text-[2.5rem] text-[#2c61aa] tracking-tighter leading-none m-0"
                                         style={{ fontFamily: "'Impact', 'Arial Black', sans-serif", WebkitTextStroke: "1px #113665", textShadow: "2px 2px 0px #113665" }}
                                     >
-                                        WILD ID
+                                        NATURALENS
                                     </h2>
                                     <span className="text-[#2c61aa] font-semibold text-xs tracking-tighter uppercase leading-[1.1] mt-1 ml-1" style={{ fontFamily: "Arial, sans-serif" }}>
                                         Species<br />License
