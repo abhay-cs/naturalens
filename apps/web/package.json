@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "pages:build": "next build",
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply naturalens-waitlist --local",
+    "db:migrate": "wrangler d1 migrations apply naturalens-waitlist --remote",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "framer-motion": "^12.34.3",
@@ -23,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.120.0"
   }
 }

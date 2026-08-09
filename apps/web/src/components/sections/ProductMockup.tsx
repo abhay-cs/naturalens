@@ -95,7 +95,7 @@ export function ProductMockup() {
                             <span className="text-[10px] font-bold leading-tight uppercase font-sans tracking-wide mt-1">Sichuan, China</span>
                         </div>
 
-                        {/* Bottom Right (More Data & Signature) */}
+                        {/* Bottom Right (More Data) */}
                         <div className="flex-1 h-full pl-2 pr-6 flex flex-col font-sans">
                             {/* Data Row 2 */}
                             <div className="flex justify-between text-[#852554] font-bold text-[10px] uppercase pr-2 w-full tracking-tighter mt-1 mix-blend-color-burn">
@@ -115,15 +115,6 @@ export function ProductMockup() {
                                 <div className="flex flex-col items-center gap-1 w-16"><span>ENDORSE</span></div>
                             </div>
 
-                            {/* Signature */}
-                            <div className="flex justify-center flex-1 items-end pb-3 pr-10">
-                                {/* Fake Signature Name */}
-                                <svg className="w-32 h-10 -rotate-2 mix-blend-multiply opacity-80" viewBox="0 0 200 60">
-                                    {/* Red Panda cursive-ish signature path */}
-                                    <path d="M 20 40 Q 30 10 40 30 T 60 40 Q 80 20 90 40 T 120 20 Q 140 50 160 30 T 180 50" fill="none" stroke="#222" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M 35 25 Q 50 25 65 25" fill="none" stroke="#222" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
-                            </div>
                         </div>
                     </div>
 

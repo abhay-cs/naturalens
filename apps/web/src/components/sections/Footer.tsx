@@ -12,8 +12,8 @@ export function FooterSection() {
                 <div className="flex gap-6 text-sm text-wild-gray">
                     <Link href="#" className="hover:text-wild-dark transition-colors">Twitter</Link>
                     <Link href="#" className="hover:text-wild-dark transition-colors">Instagram</Link>
-                    <Link href="#" className="hover:text-wild-dark transition-colors">Privacy Policy</Link>
-                    <Link href="#" className="hover:text-wild-dark transition-colors">Terms of Service</Link>
+                    <Link href="/privacy" className="hover:text-wild-dark transition-colors">Privacy Policy</Link>
+                    <Link href="/terms" className="hover:text-wild-dark transition-colors">Terms of Service</Link>
                 </div>
             </div>
         </footer>
