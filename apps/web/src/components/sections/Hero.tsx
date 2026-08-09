@@ -4,10 +4,15 @@ import React from "react";
 import { Button } from "../ui/Button";
 import { motion } from "framer-motion";
 
+function scrollToWaitlist() {
+    const el = document.getElementById("waitlist");
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function HeroSection() {
     return (
         <section className="relative pt-40 pb-20 px-6 overflow-hidden flex flex-col items-center justify-center text-center">
-            {/* Background Decor */}
             <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-wild-amber/10 blur-[120px] rounded-full pointer-events-none" />
 
             <motion.div
@@ -20,12 +25,14 @@ export function HeroSection() {
                     See the <span className="text-wild-gray opacity-80 mix-blend-multiply">Wild</span> Differently
                 </h1>
 
-                <p className="text-lg md:text-xl text-wild-gray max-w-2xl mx-auto mb-10 leading-relaxed font-medium bg-wild-gray/10 px-4 py-2 rounded-lg inline-block mix-blend-multiply">
-                    AI-powered species recognition in real time. A quiet intelligence for curious observers.
-                </p>
-
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                    <Button
+                        type="button"
+                        variant="primary"
+                        size="lg"
+                        className="w-full sm:w-auto"
+                        onClick={scrollToWaitlist}
+                    >
                         Get Early Access
                     </Button>
                     <Button variant="outline" size="lg" className="w-full sm:w-auto px-10">

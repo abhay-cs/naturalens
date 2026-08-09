@@ -2,93 +2,138 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import type { Detection, FrameResults } from '../types';
+import type { Detection, HistoryEntry } from '../types';
+import {
+  addHistoryEntry as persistHistoryEntry,
+  deleteHistoryEntry as persistDeleteHistoryEntry,
+  setHistoryEntryInfo,
+  ensureThumbnail,
+  loadHistory,
+} from '../lib/history';
+import { fetchSpeciesInfo } from '../lib/detector';
 
-export type TabId = 'camera' | 'media' | 'map';
+export type TabId = 'camera' | 'history';
 
 interface AppStateContextValue {
   activeTab: TabId;
   setActiveTab: (id: TabId) => void;
-  scoreThreshold: number;
-  setScoreThreshold: (v: number) => void;
-  showOnlyBears: boolean;
-  setShowOnlyBears: (v: boolean) => void;
   initError: string | null;
   setInitError: (v: string | null) => void;
-  filterDetections: (d: Detection[]) => Detection[];
-  detectorOptions: { scoreThreshold: number };
-  setFrameResults: (r: FrameResults | null) => void;
-  setVideoDetections: (d: Detection[] | null) => void;
-  setVideoFrameMeta: (m: { timestamp?: number; frameIndex?: number } | null) => void;
-  displayFrame: FrameResults | { detections?: Detection[]; timestamp?: number; frameIndex?: number } | null;
-  displayDetections: Detection[] | null;
+  history: HistoryEntry[];
+  historyLoading: boolean;
+  addHistoryEntry: (detection: Detection, photoUri: string) => Promise<void>;
+  deleteHistoryEntry: (id: string) => Promise<void>;
+  /** Looks up the species details of a find saved before we fetched them. */
+  backfillSpeciesInfo: (id: string, label: string) => Promise<void>;
+  /** The find open in the detail view, if any. */
+  selectedEntry: HistoryEntry | null;
+  setSelectedEntryId: (id: string | null) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<TabId>('camera');
-  const [scoreThreshold, setScoreThreshold] = useState(0.4);
-  const [showOnlyBears, setShowOnlyBears] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
-  const [frameResults, setFrameResults] = useState<FrameResults | null>(null);
-  const [videoDetections, setVideoDetections] = useState<Detection[] | null>(null);
-  const [videoFrameMeta, setVideoFrameMeta] = useState<{
-    timestamp?: number;
-    frameIndex?: number;
-  } | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
-  const filterDetections = useCallback(
-    (detections: Detection[]): Detection[] => {
-      let out = detections.filter((d) => d.score >= scoreThreshold);
-      if (showOnlyBears) {
-        out = out.filter((d) => d.label.toLowerCase() === 'bear');
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      const entries = await loadHistory().catch(() => [] as HistoryEntry[]);
+      if (cancelled) return;
+
+      setHistory(entries);
+      setHistoryLoading(false);
+
+      // Finds saved before thumbnails existed still point the list at their full-size photo,
+      // so they're exactly the rows that are slow. Give them one, in the background.
+      //
+      // Sequentially, and deliberately so: this is image decoding, and firing twenty at once
+      // is how you run out of memory doing the thing that was supposed to save it.
+      for (const entry of entries) {
+        if (cancelled) return;
+        if (entry.thumbUri) continue;
+
+        try {
+          const updated = await ensureThumbnail(entry);
+          if (updated && !cancelled) {
+            setHistory((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+          }
+        } catch {
+          // Leave the row pointing at the full photo. Slow beats blank.
+        }
       }
-      return out;
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const addHistoryEntry = useCallback(
+    async (detection: Detection, photoUri: string) => {
+      const entry = await persistHistoryEntry(detection, photoUri);
+      setHistory((prev) => [entry, ...prev]);
     },
-    [scoreThreshold, showOnlyBears]
+    []
   );
 
-  const detectorOptions = useMemo(() => ({ scoreThreshold }), [scoreThreshold]);
+  const deleteHistoryEntry = useCallback(async (id: string) => {
+    await persistDeleteHistoryEntry(id);
+    setHistory((prev) => prev.filter((entry) => entry.id !== id));
+  }, []);
 
-  const displayFrame: AppStateContextValue['displayFrame'] =
-    activeTab === 'media' && videoDetections && videoFrameMeta
-      ? { detections: videoDetections, ...videoFrameMeta }
-      : frameResults ?? null;
+  const backfillSpeciesInfo = useCallback(async (id: string, label: string) => {
+    const info = await fetchSpeciesInfo(label);
+    const updated = await setHistoryEntryInfo(id, info);
 
-  const displayDetections = displayFrame?.detections ?? null;
+    // Deleted while the lookup was in flight — nothing left to update.
+    if (!updated) return;
+
+    setHistory((prev) => prev.map((entry) => (entry.id === id ? updated : entry)));
+  }, []);
+
+  // Derived from the id rather than held as its own entry, so deleting the open find
+  // closes the detail view on its own.
+  const selectedEntry = useMemo(
+    () => history.find((entry) => entry.id === selectedEntryId) ?? null,
+    [history, selectedEntryId]
+  );
 
   const value: AppStateContextValue = useMemo(
     () => ({
       activeTab,
       setActiveTab,
-      scoreThreshold,
-      setScoreThreshold,
-      showOnlyBears,
-      setShowOnlyBears,
       initError,
       setInitError,
-      filterDetections,
-      detectorOptions,
-      setFrameResults,
-      setVideoDetections,
-      setVideoFrameMeta,
-      displayFrame,
-      displayDetections,
+      history,
+      historyLoading,
+      addHistoryEntry,
+      deleteHistoryEntry,
+      backfillSpeciesInfo,
+      selectedEntry,
+      setSelectedEntryId,
     }),
     [
       activeTab,
-      scoreThreshold,
-      showOnlyBears,
       initError,
-      filterDetections,
-      detectorOptions,
-      displayFrame,
-      displayDetections,
+      history,
+      historyLoading,
+      addHistoryEntry,
+      deleteHistoryEntry,
+      backfillSpeciesInfo,
+      selectedEntry,
     ]
   );
 

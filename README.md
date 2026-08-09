@@ -1,6 +1,8 @@
 # NaturaLens
 
-A global wildlife recognition platform. Identify any animal species from a photo using on-device AI — contribute to conservation science while exploring the natural world.
+A global wildlife recognition platform. Point your phone at an animal, and NaturaLens names the species and keeps a log of what you've found.
+
+Identification currently runs in the cloud, against the Gemini API. On-device inference is the eventual goal — see [docs/Architecture_Notes.md](docs/Architecture_Notes.md) for the criteria we'd want to hit before switching.
 
 ## Repo Map
 
@@ -32,21 +34,25 @@ naturalens/
 ```bash
 cd apps/mobile
 npm install
-npx expo start
+cp .env.example .env   # paste in a free Gemini API key
+npm start
 ```
 
-See [apps/mobile/README.md](apps/mobile/README.md) for full setup instructions including model and WASM assets.
+The app won't identify anything without that key. See [apps/mobile/README.md](apps/mobile/README.md) for details.
 
 ## Status
 
 | Component | Status |
 |-----------|--------|
-| Mobile app (Expo) | MVP — camera, image upload, map, theming |
-| Landing page | Not started |
+| Mobile app (Expo) | MVP — capture a photo, identify the species, save it to a list |
+| Landing page | Built — see `apps/web` |
 | Backend API | Not started |
-| Inference service | Not started |
+| Inference service | Not started — identification calls the Gemini API directly from the app |
 | ML training | Not started |
 | Data pipeline | Not started |
+
+The `services/`, `models/`, `tools/`, and `infra/` directories are placeholders for that
+roadmap. They hold a README and nothing else.
 
 ## License
 

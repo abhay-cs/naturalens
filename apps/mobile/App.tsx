@@ -3,20 +3,17 @@ import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { useFonts, Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
 import * as SplashScreen from 'expo-splash-screen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
-import { AppStateProvider } from './src/contexts/AppStateContext';
-import { OnboardingOverlay } from './src/components/OnboardingOverlay';
+import { AppStateProvider, useAppState } from './src/contexts/AppStateContext';
 import { MainLayout } from './src/layouts/MainLayout';
-
-const ONBOARDING_KEY = 'naturalens-onboarding-seen';
+import { BrandSplash } from './src/components/BrandSplash';
+import { Colors } from './src/theme/colors';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
-  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
-  const { theme, neo } = useTheme();
+  const [brandingDone, setBrandingDone] = useState(false);
+  const { activeTab } = useAppState();
 
   const [fontsLoaded] = useFonts({
     Figtree_400Regular,
@@ -24,27 +21,26 @@ function AppContent() {
     Figtree_700Bold,
   });
 
-  useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_KEY).then((v) => {
-      setOnboardingComplete(!!v);
-    });
-  }, []);
-
+  // Hold the native splash until the fonts are in, so no screen renders in the system
+  // face and then snaps to Figtree. These three weights are the ones Typography names.
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || onboardingComplete === null) {
-    return <View style={{ flex: 1, backgroundColor: neo.bg }} />;
+  if (!fontsLoaded) {
+    // Same tan as the native splash — anything else flashes on the handoff.
+    return <View style={{ flex: 1, backgroundColor: Colors.cardBackground }} />;
   }
+
+  // The camera runs full-bleed under the status bar, so dark icons disappear into the
+  // viewfinder. Everything else — the tan splash, History's white — needs them dark.
+  const overCamera = brandingDone && activeTab === 'camera';
 
   return (
     <>
-      {!onboardingComplete && (
-        <OnboardingOverlay onComplete={() => setOnboardingComplete(true)} />
-      )}
       <MainLayout />
-      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      {!brandingDone && <BrandSplash onDone={() => setBrandingDone(true)} />}
+      <StatusBar style={overCamera ? 'light' : 'dark'} />
     </>
   );
 }
@@ -52,11 +48,9 @@ function AppContent() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <AppStateProvider>
-          <AppContent />
-        </AppStateProvider>
-      </ThemeProvider>
+      <AppStateProvider>
+        <AppContent />
+      </AppStateProvider>
     </SafeAreaProvider>
   );
 }

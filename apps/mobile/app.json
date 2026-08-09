@@ -10,24 +10,23 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f1ede4"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mobileMVP"
+      "bundleIdentifier": "com.abhaycs.naturalens"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1a3c40"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA"
       ],
-      "package": "com.anonymous.mobileMVP"
+      "package": "com.abhaycs.naturalens"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +35,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow NaturaLens to access your camera"
+          "cameraPermission": "Allow NaturaLens to access your camera",
+          "recordAudioAndroid": false
         }
       ],
       "expo-font"

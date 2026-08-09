@@ -1,177 +1,97 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback } from 'react';
+import { Modal, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppState } from '../contexts/AppStateContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { CameraScreen } from '../screens/CameraScreen';
-import { MediaScreen } from '../screens/MediaScreen';
-import { MapScreen } from '../screens/MapScreen';
-import { TabBar } from '../components/TabBar';
-import { ResultsPanel } from '../components/ResultsPanel';
-import { SettingsSheet } from '../components/SettingsSheet';
+import { Spacing } from '../theme/spacing';
+import { CameraDetectionScreen } from '../screens/CameraDetectionScreen';
+import { HistoryScreen } from '../screens/HistoryScreen';
+import { SpeciesDetailScreen } from '../screens/SpeciesDetailScreen';
+import { BottomNavigation } from '../components/BottomNavigation';
 import { ErrorBanner } from '../components/ErrorBanner';
-import { ThemeToggle } from '../components/ThemeToggle';
-import { Ionicons } from '@expo/vector-icons';
 
 export function MainLayout() {
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const insets = useSafeAreaInsets();
-  const { neo, neoShadowSm } = useTheme();
-
   const {
     activeTab,
     setActiveTab,
-    scoreThreshold,
-    setScoreThreshold,
-    showOnlyBears,
-    setShowOnlyBears,
     initError,
     setInitError,
-    displayFrame,
-    displayDetections,
-    setFrameResults,
+    selectedEntry,
+    setSelectedEntryId,
+    deleteHistoryEntry,
   } = useAppState();
 
-  const isCamera = activeTab === 'camera';
-  const isMap = activeTab === 'map';
-  const isMedia = activeTab === 'media';
+  const closeDetail = useCallback(() => setSelectedEntryId(null), [setSelectedEntryId]);
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteHistoryEntry(id);
+        setSelectedEntryId(null);
+      } catch {
+        setInitError('Could not delete that find. Try again.');
+      }
+    },
+    [deleteHistoryEntry, setSelectedEntryId, setInitError]
+  );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: neo.bg }]} edges={['top']}>
-      {(isCamera || isMap || isMedia) && (
-        <View style={styles.floatingActions}>
-          <TouchableOpacity
-            onPress={() => setSettingsOpen(true)}
-            style={[
-              styles.floatingBtn,
-              {
-                backgroundColor: 'rgba(0,0,0,0.35)',
-                borderWidth: 2,
-                borderColor: neo.border,
-              },
-            ]}
-          >
-            <Ionicons name="settings-outline" size={22} color="#fff" />
-          </TouchableOpacity>
-          <View style={[styles.floatingBtn, { backgroundColor: 'rgba(0,0,0,0.35)', borderWidth: 2, borderColor: neo.border }]}>
-            <ThemeToggle light />
-          </View>
-        </View>
-      )}
+    <View style={styles.container}>
+      {/* Screens fill the window and own their own safe area — the camera runs full-bleed
+          under the status bar and the tab bar, and History insets itself. */}
+      {activeTab === 'camera' ? <CameraDetectionScreen /> : <HistoryScreen />}
 
+      {/* Floats rather than sitting in flow: in flow it would shove the viewfinder down. */}
       {initError && (
-        <ErrorBanner message={initError} onDismiss={() => setInitError(null)} />
-      )}
-
-      <SettingsSheet
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        scoreThreshold={scoreThreshold}
-        setScoreThreshold={setScoreThreshold}
-        showOnlyBears={showOnlyBears}
-        setShowOnlyBears={setShowOnlyBears}
-      />
-
-      <View style={[styles.content, isCamera && styles.contentFullscreen]}>
-        {activeTab === 'camera' && <CameraScreen />}
-        {activeTab === 'media' && <MediaScreen />}
-        {activeTab === 'map' && <MapScreen />}
-      </View>
-
-      {activeTab !== 'map' && (
         <View
-          style={[
-            styles.resultsWrap,
-            isCamera
-              ? {
-                  position: 'absolute',
-                  bottom: 260 + insets.bottom,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'transparent',
-                  borderTopWidth: 0,
-                  paddingHorizontal: 16,
-                  paddingBottom: 0,
-                }
-              : {
-                  backgroundColor: neo.bg,
-                  borderTopColor: neo.border,
-                  paddingBottom: 80 + insets.bottom,
-                },
-          ]}
+          style={[styles.errorWrap, { top: insets.top + Spacing.s }]}
+          pointerEvents="box-none"
         >
-          {(activeTab !== 'camera' || (displayDetections?.length ?? 0) > 0) && (
-            <ResultsPanel
-              frame={displayFrame ?? undefined}
-              detections={displayDetections ?? undefined}
-              emptyMessage="No bears detected (above threshold)."
-              compact={isCamera}
-              onDismiss={isCamera ? () => setFrameResults(null) : undefined}
-            />
-          )}
+          <ErrorBanner message={initError} onDismiss={() => setInitError(null)} />
         </View>
       )}
 
       <View
         style={[
-          styles.tabBarWrap,
-          {
-            backgroundColor: neo.surface,
-            borderTopColor: neo.border,
-            paddingBottom: insets.bottom,
-          },
+          styles.navWrap,
+          { paddingBottom: insets.bottom + Spacing.l },
         ]}
+        pointerEvents="box-none"
       >
-        <TabBar active={activeTab} onSelect={setActiveTab} />
+        <BottomNavigation activeTab={activeTab} onSelect={setActiveTab} />
       </View>
-    </SafeAreaView>
+
+      {/* A Modal rather than an absolute-fill View: onRequestClose is what makes Android's
+          hardware back button close the detail instead of backgrounding the app. */}
+      <Modal
+        visible={selectedEntry !== null}
+        animationType="slide"
+        onRequestClose={closeDetail}
+      >
+        {selectedEntry && (
+          <SpeciesDetailScreen
+            entry={selectedEntry}
+            onClose={closeDetail}
+            onDelete={handleDelete}
+          />
+        )}
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-    fontFamily: 'Figtree_700Bold',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  floatingActions: {
+  errorWrap: {
     position: 'absolute',
-    top: 69,
-    right: 16,
-    zIndex: 10,
-    flexDirection: 'row',
-    gap: 8,
+    left: 0,
+    right: 0,
   },
-  floatingBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: { flex: 1 },
-  contentFullscreen: { minHeight: 300 },
-  resultsWrap: {
-    borderTopWidth: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  tabBarWrap: {
-    borderTopWidth: 2,
-    paddingBottom: 0,
+  navWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacing.l,
   },
 });

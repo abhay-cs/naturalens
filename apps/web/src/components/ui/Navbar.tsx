@@ -5,6 +5,12 @@ import { Button } from "./Button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+function scrollToWaitlist() {
+    const el = document.getElementById("waitlist");
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function Navbar() {
     const [scrolled, setScrolled] = useState(false);
 
@@ -26,26 +32,17 @@ export function Navbar() {
                 } rounded-full`}
         >
             <div className="flex items-center justify-between px-6 py-3">
-                {/* Logo */}
                 <Link href="/" className="text-xl font-bold tracking-tight text-wild-dark">
-                    Wild ID
+                    Naturalens
                 </Link>
 
-                {/* Links */}
-                <nav className="hidden md:flex items-center gap-8">
-                    <Link href="#product" className="text-wild-gray hover:text-wild-dark font-medium transition-colors">
-                        Product
-                    </Link>
-                    <Link href="#how-it-works" className="text-wild-gray hover:text-wild-dark font-medium transition-colors">
-                        How It Works
-                    </Link>
-                    <Link href="#conservation" className="text-wild-gray hover:text-wild-dark font-medium transition-colors">
-                        Conservation
-                    </Link>
-                </nav>
-
-                {/* CTA */}
-                <Button variant="primary" size="sm" className="hidden md:inline-flex px-6">
+                <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    className="hidden md:inline-flex px-6"
+                    onClick={scrollToWaitlist}
+                >
                     Early Access
                 </Button>
             </div>
