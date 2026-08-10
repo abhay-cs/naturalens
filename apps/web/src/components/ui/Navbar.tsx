@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "./Button";
-import Link from "next/link";
+import { Logo } from "./Logo";
 import { motion } from "framer-motion";
 
 function scrollToWaitlist() {
@@ -32,9 +32,7 @@ export function Navbar() {
                 } rounded-full`}
         >
             <div className="flex items-center justify-between px-6 py-3">
-                <Link href="/" className="text-xl font-bold tracking-tight text-wild-dark">
-                    Naturalens
-                </Link>
+                <Logo size={28} />
 
                 <Button
                     type="button"

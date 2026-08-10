@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Logo } from "../../components/ui/Logo";
 
 export const metadata: Metadata = {
   title: "Terms of Service | Naturalens",
@@ -12,9 +13,7 @@ export default function TermsPage() {
     <main className="min-h-screen bg-white text-wild-dark">
       <header className="border-b border-black/5 px-6 py-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight text-wild-dark">
-            Naturalens
-          </Link>
+          <Logo size={28} />
           <Link
             href="/"
             className="text-sm font-medium text-wild-gray transition-colors hover:text-wild-dark"

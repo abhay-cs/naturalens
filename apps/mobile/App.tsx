@@ -28,12 +28,12 @@ function AppContent() {
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    // Same tan as the native splash — anything else flashes on the handoff.
-    return <View style={{ flex: 1, backgroundColor: Colors.cardBackground }} />;
+    // Same frosted ground as the native splash — anything else flashes on the handoff.
+    return <View style={{ flex: 1, backgroundColor: Colors.splashBackground }} />;
   }
 
   // The camera runs full-bleed under the status bar, so dark icons disappear into the
-  // viewfinder. Everything else — the tan splash, History's white — needs them dark.
+  // viewfinder. Everything else — the frosted splash, History's white — needs them dark.
   const overCamera = brandingDone && activeTab === 'camera';
 
   return (

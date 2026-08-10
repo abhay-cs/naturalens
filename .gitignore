@@ -75,3 +75,6 @@ pics/
 *.tsbuildinfo
 .turbo/
 .cache/
+
+# Brand pipeline font cache (OG wordmark); regenerated on demand
+tools/brand/.fonts/
