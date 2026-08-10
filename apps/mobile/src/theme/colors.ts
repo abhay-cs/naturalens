@@ -2,10 +2,11 @@ import type { ConservationStatus } from '../types';
 
 export const Colors = {
   primary: '#135c3e', // Forest green — the action colour: buttons, active tab
-  brand: '#1a3c40', // Deep teal — the identity colour: logo, splash, camera surface
+  brand: '#1a3c40', // Deep teal — the identity colour: camera surface, badges
   background: '#ffffff',
   surface: '#f5f5f5',
-  cardBackground: '#f1ede4', // light tan
+  cardBackground: '#f1ede4', // light tan — cards only
+  splashBackground: '#FAFAF8', // matches native splash + frosted icon tile
   textPrimary: '#000000',
   textSecondary: '#666666',
   white: '#ffffff',

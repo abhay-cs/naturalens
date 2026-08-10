@@ -11,8 +11,8 @@ import { Colors } from '../theme/colors';
 /** How much of the screen's height the owl fills. */
 const MARK_HEIGHT = 0.42;
 
-/** The mark is tall and narrow — cropped tight to the ink, so this is the real shape. */
-const MARK_ASPECT = 0.5433;
+/** The mark is tall and narrow — cropped tight to the ink (652×1200). */
+const MARK_ASPECT = 652 / 1200;
 
 /** Time the mark holds at full size before handing off to the app. */
 const HOLD_MS = 600;
@@ -23,7 +23,7 @@ interface BrandSplashProps {
 }
 
 /**
- * Shown between the native splash and the camera. Same owl, same tan ground as the
+ * Shown between the native splash and the camera. Same owl, same frosted ground as the
  * native splash, so the two read as one moment rather than two screens.
  */
 export function BrandSplash({ onDone }: BrandSplashProps) {
@@ -79,7 +79,7 @@ export function BrandSplash({ onDone }: BrandSplashProps) {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.splashBackground,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
