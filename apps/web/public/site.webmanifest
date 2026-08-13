@@ -1,11 +1,11 @@
 {
   "name": "Naturalens",
   "short_name": "Naturalens",
-  "description": "AI-powered species recognition in real time.",
+  "description": "Point your camera at anything alive. Naturalens returns a name, a confidence, and one thing to look for next time.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAFAF8",
-  "theme_color": "#FAFAF8",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
       "src": "/icon-192.png",

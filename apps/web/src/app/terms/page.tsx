@@ -10,13 +10,13 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-white text-wild-dark">
-      <header className="border-b border-black/5 px-6 py-6">
+    <main className="min-h-[100dvh] bg-bg text-fg">
+      <header className="border-b border-border px-6 py-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Logo size={28} />
           <Link
             href="/"
-            className="text-sm font-medium text-wild-gray transition-colors hover:text-wild-dark"
+            className="text-sm font-medium text-muted transition-colors hover:text-fg"
           >
             Back to home
           </Link>
@@ -24,19 +24,19 @@ export default function TermsPage() {
       </header>
 
       <article className="mx-auto max-w-3xl px-6 py-16">
-        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-wild-gray">
+        <p className="mb-3 font-[family-name:var(--font-archivo)] text-[11px] font-medium uppercase tracking-[0.14em] text-caption">
           Legal
         </p>
-        <h1 className="mb-3 text-4xl font-bold tracking-tight md:text-5xl">
+        <h1 className="mb-3 font-[family-name:var(--font-outfit)] text-4xl font-light tracking-[-0.025em] md:text-5xl">
           Terms of Service
         </h1>
-        <p className="mb-12 text-sm text-wild-gray">
+        <p className="mb-12 text-sm text-muted">
           Last updated: August 9, 2026
         </p>
 
-        <div className="space-y-10 text-base leading-relaxed text-wild-dark/90">
+        <div className="space-y-10 text-base leading-relaxed text-fg/90">
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               1. The service
             </h2>
             <p>
@@ -54,7 +54,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               2. Acceptance
             </h2>
             <p>
@@ -66,7 +66,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               3. Eligibility and accounts
             </h2>
             <p>
@@ -78,7 +78,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               4. Early access and waitlist
             </h2>
             <p>
@@ -90,7 +90,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               5. Photos, observations, and AI identification
             </h2>
             <p>
@@ -115,7 +115,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               6. Acceptable use
             </h2>
             <p>You agree not to:</p>
@@ -140,7 +140,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               7. Third-party services
             </h2>
             <p>
@@ -152,7 +152,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               8. Intellectual property
             </h2>
             <p>
@@ -164,7 +164,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               9. Disclaimers
             </h2>
             <p>
@@ -177,7 +177,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               10. Limitation of liability
             </h2>
             <p>
@@ -192,7 +192,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               11. Termination
             </h2>
             <p>
@@ -205,7 +205,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               12. Changes
             </h2>
             <p>
@@ -216,7 +216,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               13. Contact
             </h2>
             <p>
