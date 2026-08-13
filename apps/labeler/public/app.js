@@ -215,9 +215,12 @@ function fitWorld() {
 }
 
 function applyWorld() {
-  els.world.style.transform = `translate(${state.world.x}px, ${state.world.y}px) scale(${state.world.scale})`;
+  const scale = Math.max(state.world.scale || 1, 0.01);
+  els.world.style.transform = `translate(${state.world.x}px, ${state.world.y}px) scale(${scale})`;
   els.world.style.width = `${els.photo.naturalWidth}px`;
   els.world.style.height = `${els.photo.naturalHeight}px`;
+  // Keep box stroke/handles/tags at ~constant screen size while the world zooms.
+  els.world.style.setProperty("--world-inv", String(1 / scale));
 }
 
 function renderBoxes() {
