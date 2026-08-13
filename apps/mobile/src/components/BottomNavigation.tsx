@@ -29,7 +29,7 @@ export function BottomNavigation({ activeTab, onSelect }: BottomNavigationProps)
             <Ionicons
               name={icon}
               size={24}
-              color={isActive ? Colors.primary : Colors.textSecondary}
+              color={isActive ? Colors.fg : Colors.muted}
             />
           </TouchableOpacity>
         );
@@ -44,13 +44,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-evenly',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bg,
     borderRadius: BorderRadii.pill,
-    shadowColor: Colors.textPrimary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   iconContainer: { padding: Spacing.s },
 });

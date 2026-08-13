@@ -30,21 +30,18 @@ export function Card({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: BorderRadii.large,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadii.panel,
     padding: Spacing.l,
   },
   elevated: {
-    backgroundColor: Colors.white,
-    shadowColor: Colors.textPrimary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: Colors.bg,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   outline: {
-    backgroundColor: Colors.white,
-    borderWidth: 2,
+    backgroundColor: Colors.bg,
+    borderWidth: 1,
     borderColor: Colors.border,
   },
 });

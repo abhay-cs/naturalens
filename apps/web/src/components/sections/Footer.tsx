@@ -1,20 +1,54 @@
 import React from "react";
 import Link from "next/link";
-import { Logo } from "../ui/Logo";
+import { OwlMarkImage } from "../ui/Logo";
 
+/** Footer — exact match to Naturalens Landing.html */
 export function FooterSection() {
-    return (
-        <footer className="bg-white py-12 px-6 border-t border-black/5">
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                <Logo size={28} />
+  return (
+    <footer
+      className="flex flex-wrap items-center justify-between gap-6"
+      style={{ padding: "48px clamp(20px, 5vw, 64px)" }}
+    >
+      <div className="flex items-center gap-3">
+        <OwlMarkImage size={24} />
+        <span
+          className="text-[#666666]"
+          style={{
+            fontFamily: "var(--font-archivo), Archivo, sans-serif",
+            fontSize: 12,
+            letterSpacing: "0.06em",
+          }}
+        >
+          © 2026 Naturalens
+        </span>
+      </div>
 
-                <div className="flex gap-6 text-sm text-wild-gray">
-                    <Link href="#" className="hover:text-wild-dark transition-colors">Twitter</Link>
-                    <Link href="#" className="hover:text-wild-dark transition-colors">Instagram</Link>
-                    <Link href="/privacy" className="hover:text-wild-dark transition-colors">Privacy Policy</Link>
-                    <Link href="/terms" className="hover:text-wild-dark transition-colors">Terms of Service</Link>
-                </div>
-            </div>
-        </footer>
-    );
+      <div
+        className="flex flex-wrap gap-7"
+        style={{
+          fontFamily: "var(--font-archivo), Archivo, sans-serif",
+          fontSize: 14,
+        }}
+      >
+        <Link
+          href="/privacy"
+          className="text-[#666666] no-underline transition-colors duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-[#000000]"
+        >
+          Privacy
+        </Link>
+        <Link
+          href="/terms"
+          className="text-[#666666] no-underline transition-colors duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-[#000000]"
+        >
+          Terms
+        </Link>
+        <a
+          href="mailto:hello@naturalens.app"
+          className="text-[#666666] no-underline transition-colors duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-[#000000]"
+        >
+          Contact
+        </a>
+      </div>
+    </footer>
+  );
 }

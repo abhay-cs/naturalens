@@ -1,6 +1,6 @@
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Colors } from '../theme/colors';
-import { Typography } from '../theme/spacing';
+import { BorderRadii, Typography } from '../theme/spacing';
 
 interface ButtonProps {
   title: string;
@@ -30,7 +30,7 @@ export function Button({
       ]}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       <Text
         style={[
@@ -51,26 +51,33 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primary: { backgroundColor: Colors.primary },
+  primary: {
+    backgroundColor: Colors.fg,
+    borderRadius: BorderRadii.pill,
+  },
   secondary: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.primary,
+    borderWidth: 1,
+    borderColor: Colors.fg,
+    borderRadius: BorderRadii.input,
   },
-  glass: { backgroundColor: Colors.white },
+  glass: {
+    backgroundColor: Colors.bg,
+    borderRadius: BorderRadii.pill,
+  },
   danger: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.error,
+    borderWidth: 1,
+    borderColor: Colors.fg,
+    borderRadius: BorderRadii.input,
   },
-  disabled: { opacity: 0.6 },
-  text: Typography.subtitle,
-  textPrimary: { color: Colors.white },
-  textSecondary: { color: Colors.primary },
-  textGlass: { color: Colors.textPrimary },
-  textDanger: { color: Colors.error },
+  disabled: { opacity: 0.4 },
+  text: Typography.button,
+  textPrimary: { color: Colors.bg },
+  textSecondary: { color: Colors.fg },
+  textGlass: { color: Colors.fg },
+  textDanger: { color: Colors.fg },
 });

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&amp;family=Archivo:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #FFFFFF; -webkit-font-smoothing: antialiased; }
+  a { color: #000000; }
+  a:hover { color: #666666; }
+  input::placeholder { color: #999999; }
+  ::selection { background: #000000; color: #FFFFFF; }
+  @keyframes nl-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { @keyframes nl-rise { from { opacity: 0; } to { opacity: 1; } } }
+</style>
+</helmet>
+
+<div style="background:#FFFFFF;color:#000000;font-family:Archivo,sans-serif">
+
+  <nav style="position:sticky;top:0;z-index:10;background:#FFFFFF;border-bottom:1px solid #E5E5E5;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:16px clamp(20px,5vw,64px)">
+    <a href="#top" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#000000">
+      <svg viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="16" cy="12" r="9"></circle>
+        <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+        <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+        <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+        <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+        <path d="M7,12c0,9,9.7,17,19,17"></path>
+      </svg>
+      <span style="font-family:Outfit,sans-serif;font-size:24px;letter-spacing:-0.015em">Naturalens</span>
+    </a>
+    <a href="#waitlist" style="font-family:Archivo,sans-serif;font-weight:500;font-size:14px;letter-spacing:0.02em;background:#000000;color:#FFFFFF;border-radius:999px;padding:11px 22px;text-decoration:none;transition:background 220ms cubic-bezier(0.22,1,0.36,1)" style-hover="background:#222222;color:#FFFFFF">Join the waitlist</a>
+  </nav>
+
+  <section id="top" style="min-height:calc(100vh - 65px);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:clamp(56px,9vh,120px) clamp(20px,5vw,64px)">
+    <svg viewBox="0 0 32 32" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:clamp(140px,22vh,260px);height:clamp(140px,22vh,260px);animation:nl-rise 640ms cubic-bezier(0.22,1,0.36,1) both">
+      <circle cx="16" cy="12" r="9"></circle>
+      <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+      <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+      <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+      <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+      <path d="M7,12c0,9,9.7,17,19,17"></path>
+    </svg>
+    <h1 style="font-family:Outfit,sans-serif;font-weight:200;font-size:clamp(46px,8vw,104px);line-height:1.02;letter-spacing:-0.03em;margin:clamp(32px,5vh,56px) 0 0;max-width:16ch;text-wrap:balance;animation:nl-rise 640ms cubic-bezier(0.22,1,0.36,1) 80ms both">See the Wild Differently</h1>
+    <p style="font-family:Archivo,sans-serif;font-size:clamp(16px,1.4vw,19px);line-height:1.6;color:#666666;max-width:46ch;margin:24px 0 0;text-wrap:pretty;animation:nl-rise 640ms cubic-bezier(0.22,1,0.36,1) 140ms both">Point your camera at anything alive. Naturalens returns a name, a confidence, and one thing to look for next time.</p>
+    <a href="#waitlist" style="font-family:Archivo,sans-serif;font-weight:500;font-size:16px;letter-spacing:0.02em;background:#000000;color:#FFFFFF;border-radius:999px;padding:17px 34px;text-decoration:none;margin-top:40px;transition:background 220ms cubic-bezier(0.22,1,0.36,1);animation:nl-rise 640ms cubic-bezier(0.22,1,0.36,1) 200ms both" style-hover="background:#222222;color:#FFFFFF">Get Early Access</a>
+    <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-top:20px">Offline · 41,000 species · No account</div>
+  </section>
+
+  
+
+  
+
+  <section id="waitlist" style="padding:clamp(80px,12vw,160px) clamp(20px,5vw,64px);border-bottom:1px solid #E5E5E5">
+    <div style="max-width:520px;margin:0 auto;text-align:center">
+      <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999">Waitlist</div>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:300;font-size:clamp(34px,4.6vw,56px);line-height:1.08;letter-spacing:-0.025em;margin:20px 0 0">Be there for the first release</h2>
+      <p style="font-family:Archivo,sans-serif;font-size:17px;line-height:1.65;color:#666666;margin:16px 0 40px;text-wrap:pretty">We open in small groups, region by region. Leave an address and we will write once.</p>
+      <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #000000;padding:32px;display:flex;flex-direction:column;align-items:center;gap:12px">
+          <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="16" cy="12" r="9"></circle>
+            <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+            <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+            <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+            <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+            <path d="M7,12c0,9,9.7,17,19,17"></path>
+          </svg>
+          <div style="font-family:Outfit,sans-serif;font-size:24px">You are on the list</div>
+          <div style="font-family:Archivo,sans-serif;font-size:14px;color:#666666">One message when your region opens.</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notSubmitted }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;gap:12px;text-align:left">
+          <label for="nl-email" style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#666666">Email</label>
+          <input id="nl-email" type="email" placeholder="you@field.org" value="{{ email }}" onChange="{{ onEmail }}" style="font-family:Archivo,sans-serif;font-size:16px;padding:16px;border:1px solid #E5E5E5;border-radius:2px;outline:none;width:100%;box-sizing:border-box;transition:border-color 220ms cubic-bezier(0.22,1,0.36,1)" style-focus="border-color:#000000">
+          <button type="button" onClick="{{ onSubmit }}" style="font-family:Archivo,sans-serif;font-weight:500;font-size:16px;letter-spacing:0.02em;background:#000000;color:#FFFFFF;border:none;border-radius:999px;padding:17px 26px;cursor:pointer;width:100%;transition:background 220ms cubic-bezier(0.22,1,0.36,1)" style-hover="background:#222222">Get Early Access</button>
+          <span style="font-family:Archivo,sans-serif;font-size:13px;color:#999999">No newsletter, no forwarding, no account required.</span>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <footer style="padding:48px clamp(20px,5vw,64px);display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:12px">
+      <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="16" cy="12" r="9"></circle>
+        <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+        <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+        <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+        <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+        <path d="M7,12c0,9,9.7,17,19,17"></path>
+      </svg>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666;letter-spacing:0.06em">© 2026 Naturalens</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:28px">
+      <a href="#" style="font-family:Archivo,sans-serif;font-size:14px;color:#666666;text-decoration:none">Privacy</a>
+      <a href="#" style="font-family:Archivo,sans-serif;font-size:14px;color:#666666;text-decoration:none">Terms</a>
+      <a href="#" style="font-family:Archivo,sans-serif;font-size:14px;color:#666666;text-decoration:none">Contact</a>
+      <a href="Naturalens Design System.dc.html" style="font-family:Archivo,sans-serif;font-size:14px;color:#666666;text-decoration:none">Design system</a>
+    </div>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { email: "", submitted: false };
+  renderVals() {
+    return {
+      email: this.state.email,
+      submitted: this.state.submitted,
+      notSubmitted: !this.state.submitted,
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      onSubmit: () => { if (/\S+@\S+\.\S+/.test(this.state.email)) this.setState({ submitted: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

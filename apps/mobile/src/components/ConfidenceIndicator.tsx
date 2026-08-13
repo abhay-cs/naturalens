@@ -7,23 +7,13 @@ interface ConfidenceIndicatorProps {
 }
 
 export function ConfidenceIndicator({ score }: ConfidenceIndicatorProps) {
-  const isHighConfidence = score >= 85;
+  const clamped = Math.min(100, Math.max(0, score));
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{score}% Match</Text>
+      <Text style={styles.text}>{clamped}% Match</Text>
       <View style={styles.barBackground}>
-        <View
-          style={[
-            styles.barFill,
-            {
-              width: `${Math.min(100, Math.max(0, score))}%`,
-              backgroundColor: isHighConfidence
-                ? Colors.primary
-                : Colors.textSecondary,
-            },
-          ]}
-        />
+        <View style={[styles.barFill, { width: `${clamped}%` }]} />
       </View>
     </View>
   );
@@ -49,5 +39,6 @@ const styles = StyleSheet.create({
   barFill: {
     height: '100%',
     borderRadius: BorderRadii.pill,
+    backgroundColor: Colors.white,
   },
 });

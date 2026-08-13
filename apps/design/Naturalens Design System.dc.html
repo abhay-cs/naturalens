@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #FFFFFF; -webkit-font-smoothing: antialiased; }
+  a { color: #000000; }
+  a:hover { color: #666666; }
+  input::placeholder { color: #999999; }
+  ::selection { background: #000000; color: #FFFFFF; }
+</style>
+</helmet>
+
+<div style="background:#FFFFFF;color:#000000;font-family:Archivo,sans-serif;min-height:100vh;padding:0 clamp(20px,5vw,80px) 120px">
+
+  <header style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-end;justify-content:space-between;padding:80px 0 48px;border-bottom:1px solid #000000">
+    <div style="display:flex;align-items:center;gap:20px">
+      <svg viewBox="0 0 32 32" width="56" height="56" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="16" cy="12" r="9"></circle>
+        <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+        <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+        <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+        <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+        <path d="M7,12c0,9,9.7,17,19,17"></path>
+      </svg>
+      <div>
+        <div style="font-family:Outfit,sans-serif;font-weight:400;font-size:44px;line-height:1;letter-spacing:-0.02em">Naturalens</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#666666;margin-top:8px">Design System — Volume One</div>
+      </div>
+    </div>
+    <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;letter-spacing:0.06em;color:#666666;text-align:right">
+      <div>Black &amp; white only</div>
+      <div>8px grid</div>
+      <div>Rev. 1.0 / Aug 2026</div>
+    </div>
+  </header>
+
+  <section style="padding:56px 0 0;max-width:760px">
+    <p style="font-family:Outfit,sans-serif;font-weight:200;font-size:clamp(28px,3.4vw,44px);line-height:1.25;letter-spacing:-0.02em;margin:0;text-wrap:pretty">Quiet intelligence for curious observers. Every rule here exists to keep attention on the subject, not the interface.</p>
+  </section>
+
+  <!-- 01 LOGO -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:48px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">01</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Logo lockups</h2>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.06em;color:#666666;margin-left:auto">Silhouette-first · negative-space eyes</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
+      <div style="border:1px solid #E5E5E5;background:#FFFFFF;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 32 32" width="120" height="120" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="12" r="9"></circle>
+          <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+          <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+          <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+          <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+          <path d="M7,12c0,9,9.7,17,19,17"></path>
+        </svg>
+      </div>
+      <div style="border:1px solid #000000;background:#000000;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 32 32" width="120" height="120" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="12" r="9"></circle>
+          <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#FFFFFF"></path>
+          <circle cx="12" cy="12" r="1" fill="#FFFFFF"></circle>
+          <circle cx="20" cy="12" r="1" fill="#FFFFFF"></circle>
+          <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+          <path d="M7,12c0,9,9.7,17,19,17"></path>
+        </svg>
+      </div>
+      <div style="border:1px solid #E5E5E5;background:#FFFFFF;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;gap:16px">
+        <svg viewBox="0 0 32 32" width="64" height="64" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="12" r="9"></circle>
+          <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+          <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+          <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+          <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+          <path d="M7,12c0,9,9.7,17,19,17"></path>
+        </svg>
+        <span style="font-family:Outfit,sans-serif;font-weight:400;font-size:38px;letter-spacing:-0.02em;line-height:1">Naturalens</span>
+      </div>
+      <div style="border:1px solid #E5E5E5;background:#F5F5F5;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+        <svg viewBox="0 0 32 32" width="72" height="72" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="12" r="9"></circle>
+          <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+          <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+          <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+          <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+          <path d="M7,12c0,9,9.7,17,19,17"></path>
+        </svg>
+        <span style="font-family:Archivo,sans-serif;font-size:13px;letter-spacing:0.32em;text-transform:uppercase">Naturalens</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;margin-top:48px;align-items:start">
+      <div>
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-bottom:16px">Clear space</div>
+        <div style="border:1px dashed #999999;padding:32px;display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF">
+          <div style="border:1px solid #E5E5E5;padding:0">
+            <svg viewBox="0 0 32 32" width="64" height="64" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+              <circle cx="16" cy="12" r="9"></circle>
+              <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+              <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+              <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+              <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+              <path d="M7,12c0,9,9.7,17,19,17"></path>
+            </svg>
+          </div>
+        </div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.6;color:#222222;max-width:38ch;margin:16px 0 0">Minimum clear space on all four sides equals the height of the owl's eye — 0.5× the mark height. Nothing crosses it: no type, no rules, no image edges.</p>
+      </div>
+      <div>
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-bottom:16px">Minimum size</div>
+        <div style="display:flex;align-items:flex-end;gap:32px;border-bottom:1px solid #E5E5E5;padding-bottom:24px">
+          <div style="text-align:center">
+            <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="16" cy="12" r="9"></circle>
+              <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+              <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+              <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+              <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+              <path d="M7,12c0,9,9.7,17,19,17"></path>
+            </svg>
+            <div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">24px</div>
+          </div>
+          <div style="text-align:center">
+            <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="16" cy="12" r="9"></circle>
+              <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+              <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+              <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+              <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+              <path d="M7,12c0,9,9.7,17,19,17"></path>
+            </svg>
+            <div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">40px</div>
+          </div>
+          <div style="text-align:center">
+            <svg viewBox="0 0 32 32" width="64" height="64" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="16" cy="12" r="9"></circle>
+              <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+              <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+              <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+              <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+              <path d="M7,12c0,9,9.7,17,19,17"></path>
+            </svg>
+            <div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">64px</div>
+          </div>
+        </div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.6;color:#222222;max-width:38ch;margin:16px 0 0">24px is the floor. Below 40px, increase stroke to 2.5 so the pupils stay open. Never reproduce the mark smaller than 24px or with the wordmark below 16px.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 COLOR -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:48px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">02</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Color tokens</h2>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.06em;color:#666666;margin-left:auto">No hue. Depth via contrast, weight, space.</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E5E5E5;border:1px solid #E5E5E5">
+      <div style="background:#FFFFFF;padding:0">
+        <div style="height:120px;background:#FFFFFF;border-bottom:1px solid #E5E5E5"></div>
+        <div style="padding:16px">
+          <div style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.08em">--bg</div>
+          <div style="font-family:Archivo,sans-serif;font-size:12px;color:#999999;margin-top:4px">#FFFFFF</div>
+          <p style="font-family:Archivo,sans-serif;font-size:13px;line-height:1.6;color:#666666;margin:12px 0 0">Default page. Paper white. The resting state of the product.</p>
+        </div>
+      </div>
+      <div style="background:#FFFFFF">
+        <div style="height:120px;background:#000000"></div>
+        <div style="padding:16px">
+          <div style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.08em">--fg</div>
+          <div style="font-family:Archivo,sans-serif;font-size:12px;color:#999999;margin-top:4px">#000000</div>
+          <p style="font-family:Archivo,sans-serif;font-size:13px;line-height:1.6;color:#666666;margin:12px 0 0">All primary text, the mark, primary buttons. Never softened to #333.</p>
+        </div>
+      </div>
+      <div style="background:#FFFFFF">
+        <div style="height:120px;background:#666666"></div>
+        <div style="padding:16px">
+          <div style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.08em">--muted</div>
+          <div style="font-family:Archivo,sans-serif;font-size:12px;color:#999999;margin-top:4px">#666666 / #999999</div>
+          <p style="font-family:Archivo,sans-serif;font-size:13px;line-height:1.6;color:#666666;margin:12px 0 0">Secondary copy and labels. #999 only for captions and disabled text.</p>
+        </div>
+      </div>
+      <div style="background:#FFFFFF">
+        <div style="height:120px;background:#F5F5F5;border-bottom:1px solid #E5E5E5;display:flex;align-items:flex-end"><div style="height:1px;background:#E5E5E5;width:100%"></div></div>
+        <div style="padding:16px">
+          <div style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.08em">--border / --surface</div>
+          <div style="font-family:Archivo,sans-serif;font-size:12px;color:#999999;margin-top:4px">#E5E5E5 / #F5F5F5</div>
+          <p style="font-family:Archivo,sans-serif;font-size:13px;line-height:1.6;color:#666666;margin:12px 0 0">Hairlines at 1px. #F5F5F5 for inert fills only — never as a card grid backdrop.</p>
+        </div>
+      </div>
+      <div style="background:#FFFFFF">
+        <div style="height:120px;background:#000000;display:flex;align-items:center;justify-content:center"><span style="font-family:Outfit,sans-serif;color:#FFFFFF;font-size:28px">Aa</span></div>
+        <div style="padding:16px">
+          <div style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.08em">--inverted</div>
+          <div style="font-family:Archivo,sans-serif;font-size:12px;color:#999999;margin-top:4px">bg #000 / fg #FFF</div>
+          <p style="font-family:Archivo,sans-serif;font-size:13px;line-height:1.6;color:#666666;margin:12px 0 0">Full-bleed sections only. One inverted block per page — it should feel like nightfall, not a stripe.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 TYPE -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:48px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">03</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Typography</h2>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.06em;color:#666666;margin-left:auto">Outfit · Archivo</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin-bottom:56px">
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Outfit,sans-serif;font-size:64px;line-height:1;font-weight:300">Aa</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;color:#666666;margin-top:12px;line-height:1.8">Outfit — display<br>Weights 200 / 300 / 400 / 500<br>Geometric, circular bowls</div>
+      </div>
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Archivo,sans-serif;font-size:64px;line-height:1;font-weight:500">Aa</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;color:#666666;margin-top:12px;line-height:1.8">Archivo — body &amp; UI<br>Weights 400 / 500 / 600<br>Neutral grotesque, wide apertures</div>
+      </div>
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Archivo,sans-serif;font-size:34px;line-height:1.5;font-weight:500;letter-spacing:0.14em;text-transform:uppercase">Field</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;color:#666666;margin-top:12px;line-height:1.8">Archivo caps — labels<br>Weights 400 / 500<br>Field-note metadata, tracked wide</div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:0">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Outfit,sans-serif;font-weight:200;font-size:76px;line-height:1.02;letter-spacing:-0.03em">See the Wild Differently</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">Display<br>Outfit 200 · 76/78 · −3%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Outfit,sans-serif;font-weight:300;font-size:56px;line-height:1.08;letter-spacing:-0.025em">Point it at anything alive</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">H1<br>Outfit 300 · 56/60 · −2.5%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Outfit,sans-serif;font-weight:400;font-size:36px;line-height:1.15;letter-spacing:-0.015em">Recognition, then quiet</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">H2<br>Outfit 400 · 36/41 · −1.5%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Archivo,sans-serif;font-weight:600;font-size:20px;line-height:1.3;letter-spacing:-0.005em">Barred Owl · Strix varia</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">H3<br>Archivo 600 · 20/26 · −0.5%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Archivo,sans-serif;font-weight:400;font-size:17px;line-height:1.65;color:#222222;max-width:60ch">Naturalens identifies what is in front of you from a single frame, offline, in under a second. It returns one name, one confidence, and a short note on what to look for next time.</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">Body<br>Archivo 400 · 17/28 · 0</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Archivo,sans-serif;font-weight:400;font-size:14px;line-height:1.6;color:#666666">Observed 6:12 AM · Ridge Trail · 41.2°N</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">Small<br>Archivo 400 · 14/22 · 0</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5">
+        <div style="font-family:Archivo,sans-serif;font-weight:500;font-size:12px;letter-spacing:0.14em;text-transform:uppercase">Field Notes</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">Label<br>Archivo 500 · 12 · +14% · caps</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:baseline;padding:28px 0;border-top:1px solid #E5E5E5;border-bottom:1px solid #E5E5E5">
+        <div style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em">Get Early Access</div>
+        <div style="font-family:Archivo,sans-serif;font-size:12px;line-height:2;color:#666666">Button<br>Archivo 500 · 15/15 · +2%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 SPACING -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:48px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">04</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Spacing &amp; radius</h2>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.06em;color:#666666;margin-left:auto">Base 8</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:64px;align-items:start">
+      <div>
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-bottom:20px">Scale</div>
+        <div style="display:grid;gap:10px">
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:4px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">4 — hairline offsets</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:8px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">8 — icon to label</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:16px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">16 — inside controls</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:24px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">24 — stacked text</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:40px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">40 — group to group</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:64px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">64 — block spacing</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:96px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">96 — section spacing</span></div>
+          <div style="display:flex;align-items:center;gap:16px"><div style="width:160px;height:16px;background:#000000"></div><span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666">160 — page rhythm</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-bottom:20px">Radius, derived from the mark</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="text-align:center"><div style="width:72px;height:72px;border:1px solid #000000;border-radius:0"></div><div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">0 · media</div></div>
+          <div style="text-align:center"><div style="width:72px;height:72px;border:1px solid #000000;border-radius:2px"></div><div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">2 · inputs</div></div>
+          <div style="text-align:center"><div style="width:72px;height:72px;border:1px solid #000000;border-radius:8px"></div><div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">8 · panels</div></div>
+          <div style="text-align:center"><div style="width:72px;height:72px;border:1px solid #000000;border-radius:999px"></div><div style="font-family:Archivo,sans-serif;font-size:11px;color:#666666;margin-top:8px">full · eyes, CTA</div></div>
+        </div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.65;color:#222222;max-width:46ch;margin:24px 0 0">The mark holds two geometries: the perfect circle of the eye and the sharp point of the tuft. Full-pill belongs to the single primary action on a screen — the one thing that behaves like a lens. Everything else is rectangular at 0–2px, so the pill stays rare enough to read as an instruction.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 COMPONENTS -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:48px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">05</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Components</h2>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.06em;color:#666666;margin-left:auto">Default · Hover · Focus · Disabled · Inverted</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:120px repeat(auto-fit,minmax(150px,1fr));gap:24px;align-items:center;padding:24px 0;border-top:1px solid #E5E5E5">
+      <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#999999">Primary</div>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:#000000;color:#FFFFFF;border:1px solid #000000;border-radius:999px;padding:14px 28px;cursor:pointer;transition:background 220ms cubic-bezier(0.22,1,0.36,1)" style-hover="background:#222222;border-color:#222222">Get Early Access</button>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:#222222;color:#FFFFFF;border:1px solid #222222;border-radius:999px;padding:14px 28px;cursor:pointer">Hover</button>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:#000000;color:#FFFFFF;border:1px solid #000000;border-radius:999px;padding:14px 28px;cursor:pointer;outline:2px solid #000000;outline-offset:3px">Focus</button>
+      <button type="button" disabled="disabled" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:#E5E5E5;color:#999999;border:1px solid #E5E5E5;border-radius:999px;padding:14px 28px;cursor:not-allowed">Disabled</button>
+      <div style="background:#000000;padding:16px;display:flex;justify-content:center"><button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:#FFFFFF;color:#000000;border:1px solid #FFFFFF;border-radius:999px;padding:14px 28px;cursor:pointer">Inverted</button></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:120px repeat(auto-fit,minmax(150px,1fr));gap:24px;align-items:center;padding:24px 0;border-top:1px solid #E5E5E5">
+      <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#999999">Secondary</div>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:transparent;color:#000000;border:1px solid #000000;border-radius:2px;padding:14px 28px;cursor:pointer;transition:background 220ms cubic-bezier(0.22,1,0.36,1)" style-hover="background:#F5F5F5">Read the method</button>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:#F5F5F5;color:#000000;border:1px solid #000000;border-radius:2px;padding:14px 28px;cursor:pointer">Hover</button>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:transparent;color:#000000;border:1px solid #000000;border-radius:2px;padding:14px 28px;cursor:pointer;outline:2px solid #000000;outline-offset:3px">Focus</button>
+      <button type="button" disabled="disabled" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:transparent;color:#999999;border:1px solid #E5E5E5;border-radius:2px;padding:14px 28px;cursor:not-allowed">Disabled</button>
+      <div style="background:#000000;padding:16px;display:flex;justify-content:center"><button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;letter-spacing:0.02em;background:transparent;color:#FFFFFF;border:1px solid #FFFFFF;border-radius:2px;padding:14px 28px;cursor:pointer">Inverted</button></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:120px repeat(auto-fit,minmax(150px,1fr));gap:24px;align-items:center;padding:24px 0;border-top:1px solid #E5E5E5;border-bottom:1px solid #E5E5E5">
+      <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#999999">Tertiary</div>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:none;border:none;color:#000000;padding:14px 0;cursor:pointer;border-bottom:1px solid transparent" style-hover="border-bottom-color:#000000">How it works</button>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:none;border:none;color:#000000;padding:14px 0;cursor:pointer;border-bottom:1px solid #000000">Hover</button>
+      <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:none;border:none;color:#000000;padding:14px 0;cursor:pointer;outline:2px solid #000000;outline-offset:3px">Focus</button>
+      <button type="button" disabled="disabled" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:none;border:none;color:#999999;padding:14px 0;cursor:not-allowed">Disabled</button>
+      <div style="background:#000000;padding:16px;display:flex;justify-content:center"><button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:none;border:none;color:#FFFFFF;padding:0;cursor:pointer;border-bottom:1px solid #FFFFFF">Inverted</button></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:56px;margin-top:56px;align-items:start">
+      <div>
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-bottom:20px">Input</div>
+        <div style="display:grid;gap:16px;max-width:420px">
+          <input type="email" placeholder="you@field.org" style="font-family:Archivo,sans-serif;font-size:16px;padding:14px 16px;border:1px solid #E5E5E5;border-radius:2px;background:#FFFFFF;color:#000000;outline:none;width:100%;box-sizing:border-box;transition:border-color 220ms cubic-bezier(0.22,1,0.36,1)" style-focus="border-color:#000000">
+          <input type="email" value="observer@field.org" style="font-family:Archivo,sans-serif;font-size:16px;padding:14px 16px;border:1px solid #000000;border-radius:2px;background:#FFFFFF;color:#000000;outline:none;width:100%;box-sizing:border-box" readonly="readonly">
+          <input type="email" value="Disabled" disabled="disabled" style="font-family:Archivo,sans-serif;font-size:16px;padding:14px 16px;border:1px solid #E5E5E5;border-radius:2px;background:#F5F5F5;color:#999999;width:100%;box-sizing:border-box">
+        </div>
+
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin:40px 0 20px">Badge · Link · Divider</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <span style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;border:1px solid #000000;border-radius:999px;padding:6px 12px">Offline</span>
+          <span style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;background:#000000;color:#FFFFFF;border-radius:999px;padding:7px 13px">Confirmed</span>
+          <span style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;border:1px solid #E5E5E5;color:#666666;border-radius:999px;padding:6px 12px">Uncertain</span>
+        </div>
+        <div style="margin-top:20px;font-family:Archivo,sans-serif;font-size:16px;color:#222222">A <a href="#" style="color:#000000;text-decoration:none;border-bottom:1px solid #000000;padding-bottom:1px">standard link</a> carries a 1px rule; it lifts to #666 on hover.</div>
+        <div style="height:1px;background:#E5E5E5;margin:24px 0"></div>
+        <div style="height:1px;background:#000000;width:64px"></div>
+      </div>
+
+      <div>
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin-bottom:20px">Nav</div>
+        <div style="border:1px solid #E5E5E5;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:12px">
+            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="16" cy="12" r="9"></circle>
+              <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#000000"></path>
+              <circle cx="12" cy="12" r="1" fill="#000000"></circle>
+              <circle cx="20" cy="12" r="1" fill="#000000"></circle>
+              <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+              <path d="M7,12c0,9,9.7,17,19,17"></path>
+            </svg>
+            <span style="font-family:Outfit,sans-serif;font-size:22px;letter-spacing:-0.01em">Naturalens</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:24px">
+            <a href="#" style="font-family:Archivo,sans-serif;font-size:14px;color:#666666;text-decoration:none">Method</a>
+            <a href="#" style="font-family:Archivo,sans-serif;font-size:14px;color:#000000;text-decoration:none;border-bottom:1px solid #000000">Field notes</a>
+            <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:14px;background:#000000;color:#FFFFFF;border:none;border-radius:999px;padding:10px 20px;cursor:pointer">Waitlist</button>
+          </div>
+        </div>
+
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin:40px 0 20px">Empty state</div>
+        <div style="border:1px solid #E5E5E5;padding:56px 32px;text-align:center">
+          <svg viewBox="0 0 32 32" width="72" height="72" fill="none" stroke="#E5E5E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="16" cy="12" r="9"></circle>
+            <path d="M20.5,4.2C19.2,3.4,17.6,3,16,3s-3.2,0.4-4.5,1.2C14.2,5.8,16,8.7,16,12C16,8.7,17.8,5.8,20.5,4.2z" fill="#E5E5E5"></path>
+            <circle cx="12" cy="12" r="1" fill="#E5E5E5"></circle>
+            <circle cx="20" cy="12" r="1" fill="#E5E5E5"></circle>
+            <path d="M16.1,21c2.2,2.3,5.4,3.8,8.9,3.8h0V12"></path>
+            <path d="M7,12c0,9,9.7,17,19,17"></path>
+          </svg>
+          <div style="font-family:Outfit,sans-serif;font-size:26px;margin-top:20px">Nothing observed yet</div>
+          <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.6;color:#666666;margin:10px auto 24px;max-width:34ch">Your sightings appear here once you point the lens at something.</p>
+          <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:#000000;color:#FFFFFF;border:none;border-radius:999px;padding:13px 26px;cursor:pointer">Open the lens</button>
+        </div>
+
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#999999;margin:40px 0 20px">Waitlist form — single column</div>
+        <div style="max-width:420px;display:grid;gap:12px">
+          <label for="ds-email" style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#666666">Email</label>
+          <input id="ds-email" type="email" placeholder="you@field.org" style="font-family:Archivo,sans-serif;font-size:16px;padding:15px 16px;border:1px solid #E5E5E5;border-radius:2px;outline:none;width:100%;box-sizing:border-box" style-focus="border-color:#000000">
+          <button type="button" style="font-family:Archivo,sans-serif;font-weight:500;font-size:15px;background:#000000;color:#FFFFFF;border:none;border-radius:999px;padding:15px 26px;cursor:pointer;width:100%">Get Early Access</button>
+          <span style="font-family:Archivo,sans-serif;font-size:13px;color:#999999">One message when we open. Nothing else.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 ICONOGRAPHY -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:48px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">06</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Iconography</h2>
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.06em;color:#666666;margin-left:auto">32 grid · 2px stroke · round caps</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:48px;align-items:start">
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="11"></circle><circle cx="16" cy="16" r="3.5" fill="#000000" stroke="none"></circle></svg>
+        <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5 L27 26 L5 26 Z" fill="#000000"></path></svg>
+        <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22 C5 10 27 10 27 22"></path><circle cx="16" cy="22" r="2.5" fill="#000000" stroke="none"></circle></svg>
+        <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="22" height="22"></rect><circle cx="16" cy="16" r="5"></circle></svg>
+        <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6 V26 M6 16 H26"></path></svg>
+      </div>
+      <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.7;color:#222222;max-width:46ch;margin:0">Icons are drawn on the same 32 grid as the mark, at 2px stroke with round caps and joins, so an icon set beside the owl reads at one optical weight. Fills are solid black only — no two-tone, no outline-plus-tint, no duotone. When a shape needs emphasis, fill it; when it needs recession, leave it hollow.</p>
+    </div>
+  </section>
+
+  <!-- 07 MOTION -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:40px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">07</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Motion</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:32px">
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Entrance</div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.65;color:#666666;margin:0">Fade with 8px rise. 480ms, cubic-bezier(0.22, 1, 0.36, 1). One stagger of 60ms, never more.</p>
+      </div>
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">State change</div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.65;color:#666666;margin:0">220ms on color and border only. No scale on hover, no bounce, no spring overshoot.</p>
+      </div>
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Recognition</div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.65;color:#666666;margin:0">The result arrives as one still moment: the frame holds, the name fades in, nothing else moves for 600ms.</p>
+      </div>
+      <div style="border-top:1px solid #000000;padding-top:16px">
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Reduced motion</div>
+        <p style="font-family:Archivo,sans-serif;font-size:15px;line-height:1.65;color:#666666;margin:0">All entrances collapse to opacity. Nothing in the system depends on movement to be understood.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 DO / DON'T -->
+  <section style="padding:96px 0 0">
+    <div style="display:flex;align-items:baseline;gap:20px;border-bottom:1px solid #E5E5E5;padding-bottom:16px;margin-bottom:40px">
+      <span style="font-family:Archivo,sans-serif;font-size:12px;letter-spacing:0.14em;color:#999999">08</span>
+      <h2 style="font-family:Outfit,sans-serif;font-weight:400;font-size:28px;line-height:1;letter-spacing:-0.01em;margin:0">Do / Don't</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:#E5E5E5;border:1px solid #E5E5E5">
+      <div style="background:#FFFFFF;padding:32px">
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:20px">Do</div>
+        <div style="display:grid;gap:14px;font-family:Archivo,sans-serif;font-size:15px;line-height:1.6;color:#222222">
+          <div>Let the mark carry the hero at full scale.</div>
+          <div>Give one screen one primary action.</div>
+          <div>Use full-bleed black or white for atmosphere.</div>
+          <div>Separate with hairlines and space, not boxes.</div>
+          <div>Set metadata in tracked caps, prose in Archivo, voice in Outfit.</div>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;padding:32px">
+        <div style="font-family:Archivo,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:20px">Don't</div>
+        <div style="display:grid;gap:14px;font-family:Archivo,sans-serif;font-size:15px;line-height:1.6;color:#666666">
+          <div style="text-decoration:line-through">Purple or any gradient background.</div>
+          <div style="text-decoration:line-through">A card grid inside the hero.</div>
+          <div style="text-decoration:line-through">Floating badges or chips over media.</div>
+          <div style="text-decoration:line-through">Rainbow pills and multi-tone icons.</div>
+          <div style="text-decoration:line-through">Two CTAs of equal weight side by side.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top:96px;padding-top:32px;border-top:1px solid #000000;display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:center">
+    <span style="font-family:Archivo,sans-serif;font-size:12px;color:#666666;letter-spacing:0.06em">Naturalens Design System · Rev 1.0</span>
+    <a href="Naturalens Landing.dc.html" style="font-family:Archivo,sans-serif;font-size:15px;font-weight:500;color:#000000;text-decoration:none;border-bottom:1px solid #000000">See the landing page →</a>
+  </footer>
+
+</div>
+
+</x-dc>
+</body>
+</html>

@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
-import { useFonts, Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
+import {
+  useFonts,
+  Outfit_200ExtraLight,
+  Outfit_300Light,
+  Outfit_400Regular,
+} from '@expo-google-fonts/outfit';
+import {
+  Archivo_400Regular,
+  Archivo_500Medium,
+  Archivo_600SemiBold,
+} from '@expo-google-fonts/archivo';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppStateProvider, useAppState } from './src/contexts/AppStateContext';
@@ -15,25 +25,25 @@ function AppContent() {
   const [brandingDone, setBrandingDone] = useState(false);
   const { activeTab } = useAppState();
 
+  // Families must match RequiredFontFamilies from the generated tokens.
   const [fontsLoaded] = useFonts({
-    Figtree_400Regular,
-    Figtree_600SemiBold,
-    Figtree_700Bold,
+    Outfit_200ExtraLight,
+    Outfit_300Light,
+    Outfit_400Regular,
+    Archivo_400Regular,
+    Archivo_500Medium,
+    Archivo_600SemiBold,
   });
 
-  // Hold the native splash until the fonts are in, so no screen renders in the system
-  // face and then snaps to Figtree. These three weights are the ones Typography names.
   useEffect(() => {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    // Same frosted ground as the native splash — anything else flashes on the handoff.
     return <View style={{ flex: 1, backgroundColor: Colors.splashBackground }} />;
   }
 
-  // The camera runs full-bleed under the status bar, so dark icons disappear into the
-  // viewfinder. Everything else — the frosted splash, History's white — needs them dark.
+  // Camera is black chrome — light status icons. Everywhere else needs dark icons.
   const overCamera = brandingDone && activeTab === 'camera';
 
   return (
