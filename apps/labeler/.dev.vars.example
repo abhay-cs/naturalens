@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local secrets (never commit)
+TRAIN_TOKEN=dev-train-token-change-me
+# TEAM_DOMAIN=https://<team>.cloudflareaccess.com
+# POLICY_AUD=<access-aud>

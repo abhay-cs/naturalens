@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Runs — NaturaLens labeler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/app.css?v=6" />
+  </head>
+  <body class="page">
+    <header class="top">
+      <div class="brand">
+        <img class="mark" src="/owl.png" width="28" height="28" alt="" />
+        <div>
+          <p class="kicker">NaturaLens field desk</p>
+          <h1>Runs</h1>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="/">Label</a>
+        <a href="/upload.html">Upload</a>
+        <a href="/runs.html" aria-current="page">Runs</a>
+      </nav>
+      <p class="progress" id="progress">Loading runs…</p>
+      <p class="quota" id="quota" title="R2 free-tier guard"></p>
+    </header>
+    <main class="page-main runs-layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Training runs</h2>
+          <div class="run-actions">
+            <label class="epochs">
+              Epochs
+              <input id="epochs" type="number" min="1" max="200" value="30" />
+            </label>
+            <button type="button" class="primary" id="createBtn">Create training run</button>
+            <button type="button" class="ghost" id="refreshBtn">Refresh</button>
+          </div>
+        </div>
+        <p class="hint" id="createHint">
+          Freezes current labels into an immutable R2 snapshot. Open the Colab notebook with that run id.
+        </p>
+        <ul class="run-list" id="runList"></ul>
+      </section>
+      <section class="panel" id="detailPanel" hidden>
+        <div class="panel-head">
+          <h2 id="detailTitle">Run</h2>
+          <p id="detailMetrics" class="metrics"></p>
+        </div>
+        <p class="hint" id="detailHint"></p>
+        <div class="pred-film" id="predFilm"></div>
+        <div class="pred-stage" id="predStage" hidden>
+          <img id="predPhoto" alt="Prediction review" />
+          <canvas id="predCanvas"></canvas>
+        </div>
+      </section>
+    </main>
+    <div class="toast" id="toast" hidden></div>
+    <script src="/quota.js?v=4"></script>
+    <script src="/runs.js?v=4"></script>
+  </body>
+</html>
