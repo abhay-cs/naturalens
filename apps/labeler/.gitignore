@@ -1,0 +1,8 @@
+.dev.vars
+.dev.vars.remote
+.env.colab.example
+node_modules/
+.wrangler/
+dist/
+*.log
+.DS_Store

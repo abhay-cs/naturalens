@@ -1,0 +1,1309 @@
+{
+  "source_zip": "",
+  "detector": "torchvision.maskrcnn_resnet50_fpn_v2",
+  "coco_class": "bear",
+  "device": "mps",
+  "scales": [
+    800,
+    1280
+  ],
+  "tta": [
+    "hflip"
+  ],
+  "min_score": 0.2,
+  "huddle_split": true,
+  "images": [
+    {
+      "file": "IMG_0211.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0211.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1839.0,
+            1352.57,
+            2309.0,
+            1649.89
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            2109.38,
+            1390.96,
+            2331.46,
+            1660.36
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1792.19,
+            1359.31,
+            1890.06,
+            1608.72
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0213.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0213.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1699.0,
+            1368.0,
+            2182.44,
+            1670.0
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1141.5,
+            1295.87,
+            1454.69,
+            1556.87
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            838.18,
+            1231.3,
+            1192.05,
+            1495.33
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0223.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0223.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1698.0,
+            1515.0,
+            2047.0,
+            1713.0
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1515.5,
+            1438.67,
+            1723.69,
+            1687.33
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1223.48,
+            1388.68,
+            1536.7,
+            1674.87
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0226.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0226.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1487.38,
+            1106.91,
+            1656.09,
+            1316.19
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1174.63,
+            1064.74,
+            1497.81,
+            1322.16
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1675.52,
+            1125.08,
+            2021.43,
+            1313.34
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0243.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0243.png",
+      "boxes": [
+        {
+          "xyxy": [
+            2229.25,
+            1324.69,
+            2674.69,
+            1730.51
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            2550.16,
+            1391.99,
+            2990.5,
+            1741.25
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            2042.76,
+            1374.95,
+            2441.91,
+            1761.61
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0255.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0255.png",
+      "boxes": [
+        {
+          "xyxy": [
+            2100.18,
+            1544.9,
+            2525.87,
+            1759.26
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1810.51,
+            1452.04,
+            2180.52,
+            1778.73
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            2141.0,
+            1471.0,
+            2405.0,
+            1752.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0263.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0263.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1587.39,
+            1122.55,
+            2044.46,
+            1419.49
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1071.23,
+            1106.21,
+            1664.33,
+            1420.12
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1563.4,
+            1054.61,
+            1768.77,
+            1227.63
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0273.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0273.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1672.03,
+            1008.69,
+            2145.66,
+            1394.28
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1483.0,
+            1006.0,
+            1787.0,
+            1363.0
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1251.0,
+            1228.98,
+            1438.93,
+            1380.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0291.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0291.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1576.42,
+            1039.01,
+            2029.91,
+            1337.61
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1130.74,
+            974.06,
+            1567.17,
+            1333.51
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1574.88,
+            1010.39,
+            1822.31,
+            1165.79
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0354.JPG",
+      "width": 2304,
+      "height": 3456,
+      "mask": "masks/IMG_0354.png",
+      "boxes": [
+        {
+          "xyxy": [
+            708.1,
+            2418.23,
+            1647.44,
+            3140.73
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0405.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0405.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1103.0,
+            1364.0,
+            2141.0,
+            1716.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0426.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0426.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1335.43,
+            898.97,
+            1912.79,
+            1390.23
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0463.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0463.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1004.57,
+            920.69,
+            2048.13,
+            1566.25
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0482.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0482.png",
+      "boxes": [
+        {
+          "xyxy": [
+            630.12,
+            785.52,
+            2012.39,
+            1920.45
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1142.35,
+            1813.92,
+            1622.12,
+            2153.72
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0483.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0483.png",
+      "boxes": [
+        {
+          "xyxy": [
+            363.66,
+            739.63,
+            1934.29,
+            2271.76
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0486.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0486.png",
+      "boxes": [
+        {
+          "xyxy": [
+            910.69,
+            618.27,
+            1934.36,
+            1432.83
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0514.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0514.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1401.62,
+            980.22,
+            1906.86,
+            1356.21
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0516.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0516.png",
+      "boxes": [
+        {
+          "xyxy": [
+            708.99,
+            725.03,
+            1980.47,
+            2116.96
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0517.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0517.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1037.4,
+            649.12,
+            2112.78,
+            1760.29
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0531.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0531.png",
+      "boxes": [
+        {
+          "xyxy": [
+            796.1,
+            1499.7,
+            1090.88,
+            1817.9
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0534.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0534.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1308.0,
+            1717.27,
+            1622.52,
+            2050.24
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0540.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0540.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1682.62,
+            533.29,
+            2750.26,
+            1680.5
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0544.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0544.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1250.07,
+            357.22,
+            2279.29,
+            1493.63
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0545.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0545.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1422.52,
+            636.87,
+            2636.23,
+            1849.1
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0546.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0546.png",
+      "boxes": [
+        {
+          "xyxy": [
+            997.19,
+            583.89,
+            2168.0,
+            1776.04
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0547.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0547.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1343.97,
+            868.09,
+            2218.46,
+            1669.13
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0548.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0548.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1297.91,
+            1021.6,
+            2120.75,
+            1763.66
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0553.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0553.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1178.83,
+            716.97,
+            2596.34,
+            2027.11
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0554.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0554.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1383.75,
+            764.49,
+            2145.7,
+            1589.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0555.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0555.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1438.6,
+            1076.02,
+            2025.8,
+            1666.32
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0562.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0562.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1389.41,
+            1039.83,
+            2578.59,
+            2017.63
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0563.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0563.png",
+      "boxes": [
+        {
+          "xyxy": [
+            717.1,
+            435.98,
+            1903.13,
+            1530.7
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0564.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0564.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1272.83,
+            538.86,
+            2506.38,
+            1824.04
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0565.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0565.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1074.59,
+            558.71,
+            2267.07,
+            1860.84
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0566.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0566.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1200.14,
+            523.51,
+            2343.98,
+            1791.35
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0567.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0567.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1211.5,
+            531.46,
+            2153.34,
+            1440.31
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0568.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0568.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1219.7,
+            404.28,
+            2495.72,
+            1595.7
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0570.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0570.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1368.82,
+            743.84,
+            2478.28,
+            1683.15
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0572.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0572.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1041.0,
+            724.0,
+            1673.0,
+            1259.0
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1850.0,
+            915.0,
+            2245.0,
+            1298.0
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1590.0,
+            907.0,
+            1868.0,
+            1285.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0574.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0574.png",
+      "boxes": [
+        {
+          "xyxy": [
+            907.0,
+            1029.0,
+            2463.36,
+            1670.66
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0575.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0575.png",
+      "boxes": [
+        {
+          "xyxy": [
+            816.56,
+            591.85,
+            2110.94,
+            1644.75
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0576.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0576.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1103.94,
+            997.99,
+            2071.23,
+            1977.36
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0578.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0578.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1140.57,
+            866.71,
+            2060.32,
+            1880.99
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0579.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0579.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1339.31,
+            781.31,
+            2203.13,
+            1731.23
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0580.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0580.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1375.88,
+            834.72,
+            2182.77,
+            1712.18
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0581.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0581.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1349.57,
+            930.79,
+            2056.63,
+            1772.08
+          ],
+          "score": 1.0
+        },
+        {
+          "xyxy": [
+            1555.36,
+            113.6,
+            1741.7,
+            215.16
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0582.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0582.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1260.58,
+            817.67,
+            1979.24,
+            1629.63
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0583.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0583.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1295.8,
+            964.27,
+            2024.81,
+            1688.07
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0584.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0584.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1288.88,
+            834.34,
+            2452.2,
+            1819.18
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0585.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0585.png",
+      "boxes": [
+        {
+          "xyxy": [
+            997.95,
+            731.89,
+            2105.85,
+            1679.7
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0586.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0586.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1118.47,
+            740.82,
+            2128.69,
+            1654.85
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0588.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0588.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1288.94,
+            822.22,
+            2490.99,
+            2240.04
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0589.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0589.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1242.53,
+            917.1,
+            2455.07,
+            2207.83
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0590.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0590.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1251.33,
+            773.78,
+            2570.77,
+            2163.22
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0591.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0591.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1503.58,
+            1422.27,
+            1883.88,
+            1847.81
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0592.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0592.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1118.88,
+            554.33,
+            2370.3,
+            1851.07
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0593.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0593.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1264.65,
+            678.08,
+            2393.99,
+            1940.84
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0594.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0594.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1111.59,
+            722.24,
+            2324.0,
+            2054.36
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0599.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0599.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1203.39,
+            435.1,
+            2408.52,
+            1775.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0607.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0607.png",
+      "boxes": [
+        {
+          "xyxy": [
+            573.66,
+            319.61,
+            2112.66,
+            1460.73
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0611.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0611.png",
+      "boxes": [
+        {
+          "xyxy": [
+            2078.0,
+            1209.0,
+            2482.0,
+            1412.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "IMG_0660.JPG",
+      "width": 3456,
+      "height": 2304,
+      "mask": "masks/IMG_0660.png",
+      "boxes": [
+        {
+          "xyxy": [
+            1330.0,
+            1577.0,
+            1650.88,
+            1747.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "Melissa-1.jpg",
+      "width": 695,
+      "height": 542,
+      "mask": "masks/Melissa-1.png",
+      "boxes": [
+        {
+          "xyxy": [
+            7.18,
+            0.0,
+            694.8,
+            542.0
+          ],
+          "score": 1.0
+        }
+      ]
+    },
+    {
+      "file": "stick-on-head-bear.jpg",
+      "width": 586,
+      "height": 647,
+      "mask": "masks/stick-on-head-bear.png",
+      "boxes": [
+        {
+          "xyxy": [
+            0.0,
+            1.38,
+            586.0,
+            645.51
+          ],
+          "score": 1.0
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "images": 64,
+    "with_box": 64,
+    "without_box": 0,
+    "boxes": 86
+  }
+}

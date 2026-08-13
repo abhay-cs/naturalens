@@ -1,0 +1,5 @@
+# Apple GPU (MPS) when available. Not used by the mobile app.
+torch
+torchvision
+Pillow
+scipy

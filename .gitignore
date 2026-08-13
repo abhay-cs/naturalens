@@ -38,6 +38,18 @@ env/
 *.savedmodel/
 *.mlmodel
 
+# Local polar-bear photos — label in this workspace, do not commit the zip
+models/data/images/
+models/data/previews/
+models/data/masks/
+models/data/raw/
+models/data/coco/
+models/data/*.zip
+models/data/.cache/
+models/data/review.json
+models/weights/
+models/evaluation/results/
+
 # Environment and secrets
 .env
 .env.*
@@ -78,3 +90,10 @@ pics/
 
 # Brand pipeline font cache (OG wordmark); regenerated on demand
 tools/brand/.fonts/
+
+models/.venv-train/
+.wrangler/
+
+apps/labeler/.dev.vars
+apps/labeler/.dev.vars.remote
+
