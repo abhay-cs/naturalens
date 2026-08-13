@@ -1,0 +1,4 @@
+# CPU-only stack for proposing polar-bear boxes. Not used by the mobile app.
+torch
+torchvision
+Pillow

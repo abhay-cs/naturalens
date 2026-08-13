@@ -38,6 +38,12 @@ env/
 *.savedmodel/
 *.mlmodel
 
+# Local polar-bear photos — label in this workspace, do not commit the zip
+models/data/images/
+models/data/previews/
+models/data/raw/
+models/data/*.zip
+
 # Environment and secrets
 .env
 .env.*
