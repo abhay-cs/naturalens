@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/app.css?v=9" />
+    <link rel="stylesheet" href="/app.css?v=10" />
   </head>
   <body class="page">
     <header class="top">
@@ -30,32 +30,48 @@
         <a href="/runs.html" aria-current="page">Runs</a>
       </nav>
       <p class="progress" id="progress">Loading runs…</p>
-      <p class="quota" id="quota" title="R2 free-tier guard"></p>
+      <p class="quota" id="quota" title="Storage budget"></p>
     </header>
     <main class="page-main runs-layout">
       <section class="panel">
         <div class="panel-head">
           <h2>Training runs</h2>
           <div class="run-actions">
-            <label class="epochs">
-              Epochs
+            <label class="epochs" title="How many times the model studies the labeled photos">
+              Practice rounds
               <input id="epochs" type="number" min="1" max="200" value="30" />
             </label>
-            <button type="button" class="primary" id="createBtn">Create training run</button>
+            <button type="button" class="primary" id="createBtn">Start a training run</button>
             <button type="button" class="ghost" id="refreshBtn">Refresh</button>
           </div>
         </div>
         <p class="hint" id="createHint">
-          Freezes current labels into an immutable R2 snapshot. Open the Colab notebook with that run id.
+          Saves today’s labels as a frozen snapshot, then trains a model on them (in Colab). Open a run
+          afterward to see how well it found the bears.
         </p>
         <ul class="run-list" id="runList"></ul>
       </section>
       <section class="panel" id="detailPanel" hidden>
         <div class="panel-head">
-          <h2 id="detailTitle">Run</h2>
-          <p id="detailMetrics" class="metrics"></p>
+          <div>
+            <h2 id="detailTitle">Run</h2>
+            <p class="run-id-sub" id="detailId"></p>
+          </div>
+          <button type="button" class="ghost danger" id="deleteBtn">Delete run</button>
         </div>
+        <p class="hint" id="detailStatus"></p>
+        <div class="score-grid" id="detailScores" aria-label="How well the model did"></div>
+        <p class="hint glossary">
+          <strong>Overall score</strong> — how well boxes match overall.
+          <strong>When it says “bear”</strong> — how often that call is right.
+          <strong>Bears found</strong> — of the real bears in the photos, how many it caught.
+        </p>
         <p class="hint" id="detailHint"></p>
+        <h3 class="subhead">Photos to double-check</h3>
+        <p class="hint">
+          Green outline = your label. Amber = what the model guessed. Click a photo to compare; double-click
+          to fix it in Label.
+        </p>
         <div class="pred-film" id="predFilm"></div>
         <div class="pred-stage" id="predStage" hidden>
           <img id="predPhoto" alt="Prediction review" />
@@ -65,6 +81,6 @@
     </main>
     <div class="toast" id="toast" hidden></div>
     <script src="/quota.js?v=4"></script>
-    <script src="/runs.js?v=4"></script>
+    <script src="/runs.js?v=5"></script>
   </body>
 </html>

@@ -685,14 +685,39 @@ button {
   gap: 8px;
 }
 
-.run-item[data-active="1"] button,
-.run-item button:hover {
+.run-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.run-row .run-open {
+  min-width: 0;
+}
+
+.run-row .run-delete {
+  align-self: center;
+  width: auto;
+  white-space: nowrap;
+}
+
+.run-item[data-active="1"] .run-open,
+.run-item .run-open:hover {
   border-color: var(--paper);
 }
 
-.run-id {
+.run-title {
   font-family: Archivo, ui-sans-serif, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.run-id-sub {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--mist);
+  word-break: break-all;
 }
 
 .run-meta {
@@ -703,14 +728,19 @@ button {
   color: var(--mist);
 }
 
+.run-meta .muted {
+  color: var(--mist);
+  font-style: italic;
+}
+
 .pill {
   padding: 2px 8px;
   border-radius: var(--nl-radius-cta);
   border: 1px solid var(--line);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 10px;
-  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--mist);
 }
 
@@ -723,7 +753,7 @@ button {
   color: var(--nl-danger);
   background: var(--nl-danger-soft);
   border-color: color-mix(in srgb, var(--nl-danger) 40%, transparent);
-  font-weight: 800;
+  font-weight: 700;
 }
 .pill.running {
   color: var(--nl-warning);
@@ -736,11 +766,73 @@ button {
   background: transparent;
 }
 
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.score-card {
+  padding: 12px;
+  border-radius: var(--nl-radius-panel);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+
+.score-value {
+  margin: 0;
+  font-family: Outfit, ui-sans-serif, sans-serif;
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+
+.score-label {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.score-help {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--mist);
+  line-height: 1.4;
+}
+
+.glossary {
+  margin-top: 0;
+}
+
+.glossary strong {
+  color: var(--paper);
+  font-weight: 600;
+}
+
+.subhead {
+  margin: 20px 0 6px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mist);
+  font-weight: 600;
+}
+
 .metrics {
   margin: 0;
   font-family: Archivo, ui-sans-serif, sans-serif;
   font-size: 12px;
   color: var(--mist);
+}
+
+@media (max-width: 720px) {
+  .score-grid {
+    grid-template-columns: 1fr;
+  }
+  .run-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .pred-film {

@@ -499,6 +499,36 @@ async function handleGetRun(env: Env, id: string): Promise<Response> {
   return json({ run: merged, metrics, preds, manifest, quota: await snapshot(env) });
 }
 
+async function handleDeleteRun(env: Env, id: string): Promise<Response> {
+  const row = await env.DB.prepare(`SELECT * FROM runs WHERE id = ?`).bind(id).first<RunRow>();
+  if (!row) return json({ error: "Run not found." }, 404);
+
+  const prefix = `runs/${id}/`;
+  let cursor: string | undefined;
+  let freed = 0;
+  let deleted = 0;
+  do {
+    const page = await env.DATA.list({ prefix, limit: 1000, cursor });
+    for (const obj of page.objects) {
+      freed += obj.size || 0;
+      await env.DATA.delete(obj.key);
+      deleted += 1;
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+
+  if (freed > 0) await releaseStorage(env, freed);
+  await env.DB.prepare(`DELETE FROM runs WHERE id = ?`).bind(id).run();
+
+  return json({
+    ok: true,
+    id,
+    deleted_objects: deleted,
+    freed_bytes: freed,
+    quota: await snapshot(env),
+  });
+}
+
 async function handleRunStatus(request: Request, env: Env, id: string): Promise<Response> {
   if (!isTrainAuth(request, env)) {
     return json({ error: "Bearer TRAIN_TOKEN required." }, 401);
@@ -611,6 +641,10 @@ export default {
       }
       if (path === "/api/runs" && request.method === "POST") {
         return await handleCreateRun(request, env);
+      }
+      if (path.match(/^\/api\/runs\/[^/]+$/) && request.method === "DELETE") {
+        const id = decodeURIComponent(path.slice("/api/runs/".length));
+        return await handleDeleteRun(env, id);
       }
       if (path.match(/^\/api\/runs\/[^/]+$/) && request.method === "GET") {
         const id = decodeURIComponent(path.slice("/api/runs/".length));

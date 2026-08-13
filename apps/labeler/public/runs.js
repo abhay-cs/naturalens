@@ -3,11 +3,14 @@ const els = {
   runList: document.getElementById("runList"),
   createBtn: document.getElementById("createBtn"),
   refreshBtn: document.getElementById("refreshBtn"),
+  deleteBtn: document.getElementById("deleteBtn"),
   epochs: document.getElementById("epochs"),
   createHint: document.getElementById("createHint"),
   detailPanel: document.getElementById("detailPanel"),
   detailTitle: document.getElementById("detailTitle"),
-  detailMetrics: document.getElementById("detailMetrics"),
+  detailId: document.getElementById("detailId"),
+  detailStatus: document.getElementById("detailStatus"),
+  detailScores: document.getElementById("detailScores"),
   detailHint: document.getElementById("detailHint"),
   predFilm: document.getElementById("predFilm"),
   predStage: document.getElementById("predStage"),
@@ -20,6 +23,13 @@ let runs = [];
 let selected = null;
 let toastTimer = null;
 
+const STATUS_LABEL = {
+  queued: "Waiting",
+  running: "Training",
+  done: "Finished",
+  failed: "Failed",
+};
+
 function toast(message) {
   els.toast.hidden = false;
   els.toast.textContent = message;
@@ -29,14 +39,59 @@ function toast(message) {
   }, 2800);
 }
 
-function fmt(n) {
-  return typeof n === "number" ? n.toFixed(3) : "—";
+function pct(n) {
+  return typeof n === "number" && Number.isFinite(n) ? `${Math.round(n * 100)}%` : "—";
+}
+
+function statusLabel(status) {
+  return STATUS_LABEL[status] || status || "Unknown";
+}
+
+function formatWhen(iso) {
+  if (!iso) return "";
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+function runTitle(run) {
+  const when = formatWhen(run.created_at);
+  const photos = typeof run.images === "number" ? `${run.images} photos` : null;
+  const rounds = typeof run.epochs === "number" ? `${run.epochs} practice rounds` : null;
+  const bits = [when, photos, rounds].filter(Boolean);
+  return bits.length ? bits.join(" · ") : run.id;
+}
+
+function scoreCards(run) {
+  return `
+    <article class="score-card">
+      <p class="score-value">${pct(run.map50)}</p>
+      <p class="score-label">Overall score</p>
+      <p class="score-help">How well the boxes match overall</p>
+    </article>
+    <article class="score-card">
+      <p class="score-value">${pct(run.precision)}</p>
+      <p class="score-label">When it says “bear”</p>
+      <p class="score-help">How often that call is right</p>
+    </article>
+    <article class="score-card">
+      <p class="score-value">${pct(run.recall)}</p>
+      <p class="score-label">Bears found</p>
+      <p class="score-help">Share of real bears it caught</p>
+    </article>`;
 }
 
 function renderRuns() {
   els.runList.innerHTML = "";
   if (!runs.length) {
-    els.runList.innerHTML = `<li class="empty">No runs yet. Create one after labels look good.</li>`;
+    els.runList.innerHTML = `<li class="empty">No training runs yet. Fix labels on Label, then start a run here.</li>`;
     els.progress.textContent = "No runs";
     return;
   }
@@ -44,17 +99,29 @@ function renderRuns() {
     const li = document.createElement("li");
     li.className = "run-item";
     if (selected && selected.id === run.id) li.dataset.active = "1";
+    const hasScores = typeof run.map50 === "number";
     li.innerHTML = `
-      <button type="button">
-        <span class="run-id">${run.id}</span>
-        <span class="run-meta">
-          <span class="pill ${run.status}">${run.status}</span>
-          <span>mAP ${fmt(run.map50)}</span>
-          <span>P ${fmt(run.precision)}</span>
-          <span>R ${fmt(run.recall)}</span>
-        </span>
-      </button>`;
-    li.querySelector("button").addEventListener("click", () => openRun(run.id));
+      <div class="run-row">
+        <button type="button" class="run-open">
+          <span class="run-title">${runTitle(run)}</span>
+          <span class="run-meta">
+            <span class="pill ${run.status}">${statusLabel(run.status)}</span>
+            ${
+              hasScores
+                ? `<span>Overall ${pct(run.map50)}</span>
+                   <span>Right calls ${pct(run.precision)}</span>
+                   <span>Found ${pct(run.recall)}</span>`
+                : `<span class="muted">No scores yet</span>`
+            }
+          </span>
+        </button>
+        <button type="button" class="ghost danger run-delete" title="Delete this run">Delete</button>
+      </div>`;
+    li.querySelector(".run-open").addEventListener("click", () => openRun(run.id));
+    li.querySelector(".run-delete").addEventListener("click", (event) => {
+      event.stopPropagation();
+      deleteRun(run.id);
+    });
     els.runList.appendChild(li);
   }
   els.progress.textContent = `${runs.length} run${runs.length === 1 ? "" : "s"}`;
@@ -85,13 +152,44 @@ async function createRun() {
       window.NaturaQuota.renderQuota(document.getElementById("quota"), data.quota);
     }
     if (!res.ok) throw new Error(data.error || "Could not create run");
-    toast(`Created ${data.run.id}`);
-    els.createHint.textContent = `Run ${data.run.id} frozen with ${data.run.images} images. Set RUN_ID in Colab to that value.`;
+    toast("Training snapshot saved — open Colab with this run next");
+    els.createHint.textContent = `Snapshot ready (${data.run.images} photos, ${data.run.epochs} practice rounds). In Colab, set RUN_ID to: ${data.run.id}`;
     await loadRuns();
     await openRun(data.run.id);
   } catch (error) {
-    toast(error instanceof Error ? error.message : "Create failed");
+    toast(error instanceof Error ? error.message : "Could not start run");
     els.createBtn.disabled = false;
+  }
+}
+
+async function deleteRun(id) {
+  const run = runs.find((r) => r.id === id) || selected;
+  const label = run ? runTitle(run) : id;
+  const ok = window.confirm(
+    `Delete this training run?\n\n${label}\n\nThis removes the frozen snapshot and scores. Your photo labels on the Label page stay.`,
+  );
+  if (!ok) return;
+
+  els.deleteBtn.disabled = true;
+  try {
+    const res = await fetch(`/api/runs/${encodeURIComponent(id)}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.quota && window.NaturaQuota) {
+      window.NaturaQuota.renderQuota(document.getElementById("quota"), data.quota);
+    }
+    if (!res.ok) throw new Error(data.error || "Could not delete run");
+    toast("Run deleted");
+    if (selected && selected.id === id) {
+      selected = null;
+      els.detailPanel.hidden = true;
+      els.predFilm.innerHTML = "";
+      els.predStage.hidden = true;
+    }
+    await loadRuns();
+  } catch (error) {
+    toast(error instanceof Error ? error.message : "Delete failed");
+  } finally {
+    els.deleteBtn.disabled = false;
   }
 }
 
@@ -141,8 +239,8 @@ async function showPrediction(entry) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const gt = semanticColor("--nl-success", "#2F6B4F");
     const pred = semanticColor("--nl-warning", "#8A6A1F");
-    drawBoxes(ctx, entry.gt || [], gt, "gt", canvas.width, canvas.height);
-    drawBoxes(ctx, entry.preds || entry.boxes || [], pred, "p", canvas.width, canvas.height);
+    drawBoxes(ctx, entry.gt || [], gt, "yours ", canvas.width, canvas.height);
+    drawBoxes(ctx, entry.preds || entry.boxes || [], pred, "model ", canvas.width, canvas.height);
   };
   img.src = `/media/${encodeURIComponent(entry.id || entry.image_id)}`;
 }
@@ -156,11 +254,25 @@ async function openRun(id) {
   }
   selected = data.run;
   els.detailPanel.hidden = false;
-  els.detailTitle.textContent = data.run.id;
-  els.detailMetrics.textContent = `status ${data.run.status} · mAP ${fmt(data.run.map50)} · P ${fmt(data.run.precision)} · R ${fmt(data.run.recall)}`;
-  els.detailHint.textContent = data.run.error
-    ? data.run.error
-    : "Green = ground truth, amber = model. Click a hard case to open it in Skim.";
+  els.detailTitle.textContent = runTitle(data.run);
+  els.detailId.textContent = data.run.id;
+  const status = statusLabel(data.run.status);
+  if (data.run.error) {
+    els.detailStatus.textContent = `${status}. ${data.run.error}`;
+  } else if (data.run.status === "queued") {
+    els.detailStatus.textContent =
+      "Waiting — snapshot is ready. Train it in Colab (set RUN_ID to the id below), then refresh.";
+  } else if (data.run.status === "running") {
+    els.detailStatus.textContent = "Training in progress. Scores appear when Colab finishes.";
+  } else if (data.run.status === "done") {
+    els.detailStatus.textContent = "Finished — scores below. Check the trickiest photos next.";
+  } else if (data.run.status === "failed") {
+    els.detailStatus.textContent = "Failed — you can delete this run and start a fresh one.";
+  } else {
+    els.detailStatus.textContent = status;
+  }
+  els.detailScores.innerHTML = scoreCards(data.run);
+  els.detailHint.textContent = "";
 
   const preds = data.preds;
   const entries = Array.isArray(preds)
@@ -171,7 +283,6 @@ async function openRun(id) {
         ? preds.per_image
         : [];
 
-  // Prefer hard cases: false negatives / low IoU if present, else all.
   const ranked = entries
     .map((e) => ({
       ...e,
@@ -185,7 +296,10 @@ async function openRun(id) {
 
   els.predFilm.innerHTML = "";
   if (!ranked.length) {
-    els.predFilm.innerHTML = `<p class="empty">No predictions uploaded yet. Wait for Colab to finish.</p>`;
+    els.predFilm.innerHTML =
+      data.run.status === "done"
+        ? `<p class="empty">No photo comparisons came back with this run.</p>`
+        : `<p class="empty">No model results yet. Finish training in Colab, then hit Refresh.</p>`;
     els.predStage.hidden = true;
     renderRuns();
     return;
@@ -213,5 +327,8 @@ async function openRun(id) {
 
 els.createBtn.addEventListener("click", createRun);
 els.refreshBtn.addEventListener("click", loadRuns);
+els.deleteBtn.addEventListener("click", () => {
+  if (selected?.id) deleteRun(selected.id);
+});
 loadRuns();
 setInterval(loadRuns, 20000);
