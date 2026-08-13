@@ -8,6 +8,14 @@ export interface Env {
   TEAM_DOMAIN?: string;
   POLICY_AUD?: string;
   AUTH_MODE?: string;
+  /** Comma-separated allowlist for pin auth. */
+  PIN_AUTH_EMAILS?: string;
+  /** Shared PIN (set via `wrangler secret put PIN_AUTH_PIN`). */
+  PIN_AUTH_PIN?: string;
+  /** HMAC secret for session cookies (`wrangler secret put PIN_AUTH_SECRET`). */
+  PIN_AUTH_SECRET?: string;
+  PIN_AUTH_MAX_ATTEMPTS?: string;
+  PIN_AUTH_LOCK_MINUTES?: string;
   /** Hard caps under R2 free tier (defaults = 80% of free). */
   R2_CAP_STORAGE_BYTES?: string;
   R2_CAP_CLASS_A_MONTH?: string;
@@ -17,8 +25,11 @@ export interface Env {
 
 export type AuthContext = {
   email: string | null;
-  via: "access" | "train" | "dev";
+  via: "access" | "train" | "dev" | "pin";
 };
+
+const SESSION_COOKIE = "nl_skim_session";
+const SESSION_DAYS = 14;
 
 function unauthorized(message: string): Response {
   return new Response(JSON.stringify({ error: message }), {
@@ -55,9 +66,216 @@ function jwksFor(teamDomain: string) {
   return cachedJwks;
 }
 
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function allowedEmails(env: Env): Set<string> {
+  return new Set(
+    String(env.PIN_AUTH_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+function maxAttempts(env: Env): number {
+  const n = Number(env.PIN_AUTH_MAX_ATTEMPTS || 4);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 4;
+}
+
+function lockMinutes(env: Env): number {
+  const n = Number(env.PIN_AUTH_LOCK_MINUTES || 30);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 30;
+}
+
+function clientKey(request: Request, email?: string): string {
+  const ip =
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
+  return `${ip}|${(email || "").toLowerCase()}`;
+}
+
+function parseCookies(request: Request): Record<string, string> {
+  const raw = request.headers.get("cookie") || "";
+  const out: Record<string, string> = {};
+  for (const part of raw.split(";")) {
+    const i = part.indexOf("=");
+    if (i < 0) continue;
+    const k = part.slice(0, i).trim();
+    const v = part.slice(i + 1).trim();
+    if (k) out[k] = decodeURIComponent(v);
+  }
+  return out;
+}
+
+async function hmacSign(secret: string, data: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  return btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function b64urlJson(obj: unknown): string {
+  const json = JSON.stringify(obj);
+  return btoa(json).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function fromB64urlJson<T>(raw: string): T | null {
+  try {
+    const pad = "=".repeat((4 - (raw.length % 4)) % 4);
+    const b64 = raw.replace(/-/g, "+").replace(/_/g, "/") + pad;
+    return JSON.parse(atob(b64)) as T;
+  } catch {
+    return null;
+  }
+}
+
+export async function mintSessionCookie(
+  env: Env,
+  email: string,
+  opts: { secure?: boolean } = {},
+): Promise<string | null> {
+  if (!env.PIN_AUTH_SECRET) return null;
+  const exp = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+  const payload = b64urlJson({ email: email.toLowerCase(), exp });
+  const sig = await hmacSign(env.PIN_AUTH_SECRET, payload);
+  const value = `${payload}.${sig}`;
+  const secure = opts.secure !== false;
+  const securePart = secure ? "; Secure" : "";
+  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly${securePart}; SameSite=Lax; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
+}
+
+export function clearSessionCookie(opts: { secure?: boolean } = {}): string {
+  const secure = opts.secure !== false;
+  const securePart = secure ? "; Secure" : "";
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly${securePart}; SameSite=Lax; Max-Age=0`;
+}
+
+export async function readPinSession(
+  request: Request,
+  env: Env,
+): Promise<{ email: string } | null> {
+  if (!env.PIN_AUTH_SECRET) return null;
+  const raw = parseCookies(request)[SESSION_COOKIE];
+  if (!raw) return null;
+  const [payload, sig] = raw.split(".");
+  if (!payload || !sig) return null;
+  const expected = await hmacSign(env.PIN_AUTH_SECRET, payload);
+  if (expected !== sig) return null;
+  const data = fromB64urlJson<{ email?: string; exp?: number }>(payload);
+  if (!data?.email || typeof data.exp !== "number" || data.exp < Date.now()) return null;
+  const allow = allowedEmails(env);
+  if (allow.size && !allow.has(data.email.toLowerCase())) return null;
+  return { email: data.email.toLowerCase() };
+}
+
+async function getAttempt(env: Env, key: string) {
+  return env.DB.prepare(`SELECT key, fails, locked_until, updated_at FROM auth_attempts WHERE key = ?`)
+    .bind(key)
+    .first<{ key: string; fails: number; locked_until: string | null; updated_at: string }>();
+}
+
+async function bumpFailure(env: Env, key: string): Promise<{ fails: number; locked: boolean; remaining: number }> {
+  const max = maxAttempts(env);
+  const row = await getAttempt(env, key);
+  const now = Date.now();
+  if (row?.locked_until && Date.parse(row.locked_until) > now) {
+    return { fails: row.fails, locked: true, remaining: 0 };
+  }
+  const fails = (row?.fails || 0) + 1;
+  const locked = fails >= max;
+  const lockedUntil = locked
+    ? new Date(now + lockMinutes(env) * 60 * 1000).toISOString()
+    : null;
+  await env.DB.prepare(
+    `INSERT INTO auth_attempts (key, fails, locked_until, updated_at) VALUES (?, ?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET fails = excluded.fails, locked_until = excluded.locked_until, updated_at = excluded.updated_at`,
+  )
+    .bind(key, fails, lockedUntil, nowIso())
+    .run();
+  return { fails, locked, remaining: Math.max(0, max - fails) };
+}
+
+async function clearFailures(env: Env, key: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM auth_attempts WHERE key = ?`).bind(key).run();
+}
+
+export type LoginResult =
+  | { ok: true; email: string; setCookie: string }
+  | { ok: false; status: number; error: string; remaining?: number };
+
+export async function handlePinLogin(request: Request, env: Env): Promise<LoginResult> {
+  if (!env.PIN_AUTH_PIN || !env.PIN_AUTH_SECRET) {
+    return { ok: false, status: 503, error: "Pin auth is not configured." };
+  }
+  let body: { email?: string; pin?: string };
+  try {
+    body = (await request.json()) as { email?: string; pin?: string };
+  } catch {
+    return { ok: false, status: 400, error: "Invalid JSON body." };
+  }
+  const email = String(body.email || "").trim().toLowerCase();
+  const pin = String(body.pin || "").trim();
+  if (!email || !pin) {
+    return { ok: false, status: 400, error: "Email and PIN are required." };
+  }
+
+  const key = clientKey(request, email);
+  const existing = await getAttempt(env, key);
+  if (existing?.locked_until && Date.parse(existing.locked_until) > Date.now()) {
+    return {
+      ok: false,
+      status: 429,
+      error: "Too many tries. Wait a bit, then try again.",
+      remaining: 0,
+    };
+  }
+
+  const allow = allowedEmails(env);
+  const emailOk = allow.size === 0 || allow.has(email);
+  const pinOk = pin === String(env.PIN_AUTH_PIN);
+
+  if (!emailOk || !pinOk) {
+    const result = await bumpFailure(env, key);
+    if (result.locked) {
+      return {
+        ok: false,
+        status: 429,
+        error: "Too many tries. Locked for a while.",
+        remaining: 0,
+      };
+    }
+    return {
+      ok: false,
+      status: 401,
+      error: `Wrong email or PIN. ${result.remaining} tr${result.remaining === 1 ? "y" : "ies"} left.`,
+      remaining: result.remaining,
+    };
+  }
+
+  await clearFailures(env, key);
+  const secure = new URL(request.url).protocol === "https:";
+  const setCookie = await mintSessionCookie(env, email, { secure });
+  if (!setCookie) {
+    return { ok: false, status: 503, error: "Could not create session." };
+  }
+  return { ok: true, email, setCookie };
+}
+
 /**
  * Auth rules:
  * - /api/runs/:id/status with TRAIN_TOKEN → allowed (Colab)
+ * - AUTH_MODE=pin → signed session cookie from email+PIN login
  * - AUTH_MODE=required + TEAM_DOMAIN + POLICY_AUD → Access JWT required
  * - AUTH_MODE=optional (default) → Access JWT verified when present; otherwise allow as "dev"
  */
@@ -71,6 +289,15 @@ export async function authenticate(
   }
 
   const mode = (env.AUTH_MODE || "optional").toLowerCase();
+
+  if (mode === "pin") {
+    const session = await readPinSession(request, env);
+    if (session) {
+      return { ok: true, auth: { email: session.email, via: "pin" } };
+    }
+    return { ok: false, response: unauthorized("Sign in required.") };
+  }
+
   const token = request.headers.get("cf-access-jwt-assertion");
   const emailHeader = request.headers.get("cf-access-authenticated-user-email");
 
@@ -105,4 +332,29 @@ export async function authenticate(
   }
 
   return { ok: true, auth: { email: emailHeader || "dev@local", via: "dev" } };
+}
+
+/** Paths that stay public when AUTH_MODE=pin. */
+export function isPublicPinPath(path: string): boolean {
+  if (path === "/api/health") return true;
+  if (path === "/api/auth/login" || path === "/api/auth/logout" || path === "/api/auth/me") return true;
+  if (path === "/login" || path === "/login.html") return true;
+  if (
+    path === "/app.css" ||
+    path === "/tokens.css" ||
+    path === "/favicon.ico" ||
+    path === "/favicon.svg" ||
+    path === "/favicon-32.png" ||
+    path === "/apple-touch-icon.png" ||
+    path === "/owl.png" ||
+    path === "/site.webmanifest"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function wantsHtml(request: Request): boolean {
+  const accept = request.headers.get("accept") || "";
+  return accept.includes("text/html");
 }

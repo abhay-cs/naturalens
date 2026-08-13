@@ -1,4 +1,14 @@
-import { authenticate, type AuthContext, type Env, isTrainAuth } from "./auth";
+import {
+  authenticate,
+  clearSessionCookie,
+  handlePinLogin,
+  isPublicPinPath,
+  isTrainAuth,
+  readPinSession,
+  wantsHtml,
+  type AuthContext,
+  type Env,
+} from "./auth";
 import {
   caps,
   getCounted,
@@ -594,16 +604,75 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, "") || "/";
+    const mode = (env.AUTH_MODE || "optional").toLowerCase();
 
     if (path === "/api/health" && request.method === "GET") {
       return json({ ok: true, service: "naturalens-labeler" });
     }
 
+    if (path === "/api/auth/login" && request.method === "POST") {
+      const result = await handlePinLogin(request, env);
+      if (!result.ok) {
+        return json(
+          { error: result.error, remaining: result.remaining },
+          result.status,
+        );
+      }
+      return new Response(JSON.stringify({ ok: true, email: result.email }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+          "set-cookie": result.setCookie,
+        },
+      });
+    }
+
+    if (path === "/api/auth/logout" && request.method === "POST") {
+      const secure = url.protocol === "https:";
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+          "set-cookie": clearSessionCookie({ secure }),
+        },
+      });
+    }
+
+    if (path === "/api/auth/me" && request.method === "GET") {
+      const session = await readPinSession(request, env);
+      if (!session) return json({ ok: false }, 401);
+      return json({ ok: true, email: session.email });
+    }
+
     const allowTrain =
       (path.match(/^\/api\/runs\/[^/]+\/status$/) != null && request.method === "POST") ||
       (path === "/api/quota/report" && request.method === "POST");
+
+    // Pin mode: public assets + login stay open; everything else needs a session (or TRAIN_TOKEN).
+    if (mode === "pin") {
+      if (isPublicPinPath(path) && !path.startsWith("/api/")) {
+        return env.ASSETS.fetch(request);
+      }
+      if (!(allowTrain && isTrainAuth(request, env))) {
+        const session = await readPinSession(request, env);
+        if (!session) {
+          if (wantsHtml(request) || !path.startsWith("/api/")) {
+            return Response.redirect(new URL("/login.html", url).toString(), 302);
+          }
+          return json({ error: "Sign in required." }, 401);
+        }
+      }
+    }
+
     const authResult = await authenticate(request, env, { allowTrain });
-    if (!authResult.ok) return authResult.response;
+    if (!authResult.ok) {
+      if (mode === "pin" && (wantsHtml(request) || !path.startsWith("/api/"))) {
+        return Response.redirect(new URL("/login.html", url).toString(), 302);
+      }
+      return authResult.response;
+    }
     const { auth } = authResult;
 
     try {
@@ -611,8 +680,8 @@ export default {
         return json(await snapshot(env));
       }
       if (path === "/api/quota/report" && request.method === "POST") {
-        // Colab uses TRAIN_TOKEN; Access/dev users can report for admin adjustments.
-        if (!(isTrainAuth(request, env) || auth.via === "access" || auth.via === "dev")) {
+        // Colab uses TRAIN_TOKEN; Access/dev/pin users can report for admin adjustments.
+        if (!(isTrainAuth(request, env) || auth.via === "access" || auth.via === "dev" || auth.via === "pin")) {
           return json({ error: "Bearer TRAIN_TOKEN or Access required." }, 401);
         }
         return await handleQuotaReport(request, env);

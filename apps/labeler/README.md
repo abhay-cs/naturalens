@@ -66,22 +66,18 @@ npm run deploy
 Custom domain: `https://skim.naturalens.ca` (Workers custom domain on `naturalens.ca`).
 Workers.dev URL still works as a fallback.
 
-### 5. Put Cloudflare Access in front
+### 5. Auth (email + PIN)
 
-1. Workers & Pages → `naturalens-labeler` → Settings → Domains & Routes
-2. On `workers.dev`, click **Enable Cloudflare Access**
-3. Allow your email (and any collaborators)
-4. Copy the Access application **AUD** and your team domain
-5. Set Worker vars (dashboard or wrangler):
+`AUTH_MODE=pin` gates the Skim UI behind email + PIN (4 tries, then a lockout). Allowlisted emails and attempt limits live in `wrangler.jsonc` vars. PIN and session HMAC secret are Worker secrets (never commit them):
 
 ```bash
-npx wrangler secret put TEAM_DOMAIN   # https://<team>.cloudflareaccess.com
-npx wrangler secret put POLICY_AUD    # Access application audience
+npx wrangler secret put PIN_AUTH_PIN      # shared PIN
+npx wrangler secret put PIN_AUTH_SECRET   # long random string for cookies
 ```
 
-Then set `AUTH_MODE` to `required` in `wrangler.jsonc` vars and redeploy so the Worker rejects requests without a valid Access JWT.
+Colab still uses `Authorization: Bearer $TRAIN_TOKEN` for run status / quota report.
 
-Until Access is configured, `AUTH_MODE=optional` lets local `wrangler dev` work without a JWT.
+Optional: Cloudflare Access instead — set `AUTH_MODE=required` plus `TEAM_DOMAIN` / `POLICY_AUD` secrets.
 
 ### 6. R2 S3 API token for Colab
 
