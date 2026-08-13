@@ -1,4 +1,10 @@
 # Copy to .dev.vars for local secrets (never commit)
 TRAIN_TOKEN=dev-train-token-change-me
+
+# Email + PIN gate (AUTH_MODE=pin in wrangler.jsonc)
+PIN_AUTH_PIN=change-me
+PIN_AUTH_SECRET=generate-a-long-random-string
+
+# Optional Cloudflare Access (AUTH_MODE=required)
 # TEAM_DOMAIN=https://<team>.cloudflareaccess.com
 # POLICY_AUD=<access-aud>

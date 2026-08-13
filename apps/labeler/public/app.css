@@ -890,3 +890,101 @@ button {
   color: var(--mist);
   font-size: 13px;
 }
+
+/* —— Login —— */
+body.login-page {
+  overflow: auto;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 0, 0, 0.04), transparent 60%),
+    var(--ice);
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 32px 20px;
+}
+
+.login-brand {
+  text-align: center;
+}
+
+.login-mark {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+}
+
+.login-brand .kicker {
+  margin-bottom: 4px;
+}
+
+.login-brand h1 {
+  font-size: 40px;
+  letter-spacing: -0.04em;
+}
+
+.login-lede {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: var(--mist);
+}
+
+.login-form {
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.login-field input {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--nl-radius-input, 2px);
+  background: var(--nl-bg, #fff);
+  color: var(--paper);
+  font-family: Archivo, ui-sans-serif, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 12px 14px;
+}
+
+.login-field input:focus {
+  outline: var(--nl-focus-width, 2px) solid var(--paper);
+  outline-offset: var(--nl-focus-offset, 3px);
+}
+
+.login-error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--nl-danger);
+}
+
+.login-submit {
+  margin-top: 8px;
+  width: 100%;
+  height: 48px;
+  font-size: 15px;
+}
+
+.login-submit:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}

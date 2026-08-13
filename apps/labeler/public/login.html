@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in — NaturaLens Skim</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/app.css?v=9" />
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <div class="login-brand">
+        <img class="mark login-mark" src="/owl.png" width="48" height="48" alt="" />
+        <p class="kicker">NaturaLens field desk</p>
+        <h1>Skim</h1>
+        <p class="login-lede">Sign in with your email and PIN.</p>
+      </div>
+
+      <form class="login-form" id="loginForm" novalidate>
+        <label class="login-field">
+          <span>Email</span>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            autocomplete="username"
+            required
+            placeholder="you@example.com"
+          />
+        </label>
+        <label class="login-field">
+          <span>PIN</span>
+          <input
+            type="password"
+            id="pin"
+            name="pin"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="current-password"
+            required
+            maxlength="12"
+            placeholder="••••"
+          />
+        </label>
+        <p class="login-error" id="error" hidden></p>
+        <button type="submit" class="primary login-submit" id="submitBtn">Sign in</button>
+      </form>
+    </main>
+    <script>
+      (function () {
+        const form = document.getElementById("loginForm");
+        const errorEl = document.getElementById("error");
+        const submitBtn = document.getElementById("submitBtn");
+        const params = new URLSearchParams(location.search);
+        const next = params.get("next") || "/";
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          errorEl.hidden = true;
+          errorEl.textContent = "";
+          submitBtn.disabled = true;
+          try {
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({
+                email: document.getElementById("email").value.trim(),
+                pin: document.getElementById("pin").value.trim(),
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              errorEl.textContent = data.error || "Could not sign in.";
+              errorEl.hidden = false;
+              submitBtn.disabled = false;
+              return;
+            }
+            location.replace(next.startsWith("/") ? next : "/");
+          } catch {
+            errorEl.textContent = "Network error. Try again.";
+            errorEl.hidden = false;
+            submitBtn.disabled = false;
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
