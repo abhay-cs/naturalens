@@ -198,12 +198,40 @@ function semanticColor(name, fallback) {
   return value || fallback;
 }
 
+/** Normalize training / manifest box shapes into drawable objects. */
+function asBoxList(raw) {
+  if (!Array.isArray(raw) || !raw.length) return [];
+  // A lone count was sometimes stored as gt: 3 (number) — already rejected above.
+  return raw
+    .map((box) => {
+      if (!box) return null;
+      if (Array.isArray(box) && box.length >= 4) return { xyxy: box.slice(0, 4).map(Number) };
+      if (Array.isArray(box.xyxy) && box.xyxy.length >= 4) {
+        return { xyxy: box.xyxy.slice(0, 4).map(Number), score: box.score };
+      }
+      if (box.cx != null && box.cy != null && box.w != null && box.h != null) {
+        return {
+          cx: Number(box.cx),
+          cy: Number(box.cy),
+          w: Number(box.w),
+          h: Number(box.h),
+          score: box.score,
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function drawBoxes(ctx, boxes, color, labelPrefix, width, height) {
-  ctx.lineWidth = 2;
+  const list = asBoxList(boxes);
+  if (!list.length) return;
+  const stroke = Math.max(2, Math.round(Math.min(width, height) / 400));
+  ctx.lineWidth = stroke;
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
-  ctx.font = "500 13px Archivo, ui-sans-serif, sans-serif";
-  (boxes || []).forEach((box, i) => {
+  ctx.font = `600 ${Math.max(12, Math.round(Math.min(width, height) / 45))}px Archivo, ui-sans-serif, sans-serif`;
+  list.forEach((box, i) => {
     let x;
     let y;
     let w;
@@ -221,14 +249,40 @@ function drawBoxes(ctx, boxes, color, labelPrefix, width, height) {
       return;
     }
     ctx.strokeRect(x, y, w, h);
-    const label = `${labelPrefix}${i + 1}${box.score != null ? ` ${(box.score * 100).toFixed(0)}%` : ""}`;
-    ctx.fillText(label, x + 4, Math.max(14, y - 4));
+    const label = `${labelPrefix}${i + 1}${box.score != null ? ` ${Math.round(box.score * 100)}%` : ""}`;
+    const ty = Math.max(14, y - 4);
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    const tw = ctx.measureText(label).width + 8;
+    ctx.fillRect(x, ty - 14, tw, 18);
+    ctx.fillStyle = color;
+    ctx.fillText(label, x + 4, ty);
   });
 }
 
-async function showPrediction(entry) {
+function boxesForEntry(entry, manifestById) {
+  let gt = asBoxList(entry.gt_boxes);
+  if (!gt.length && Array.isArray(entry.gt)) gt = asBoxList(entry.gt);
+  if (!gt.length) {
+    const meta = manifestById.get(entry.id) || manifestById.get(entry.file);
+    if (meta) gt = asBoxList(meta.boxes);
+  }
+
+  let preds = asBoxList(entry.preds);
+  if (!preds.length) preds = asBoxList(entry.pred_boxes);
+  if (!preds.length && Array.isArray(entry.boxes) && Array.isArray(entry.scores)) {
+    preds = asBoxList(
+      entry.boxes.map((box, i) =>
+        Array.isArray(box) ? { xyxy: box, score: entry.scores[i] } : { ...box, score: entry.scores[i] },
+      ),
+    );
+  }
+  return { gt, preds };
+}
+
+async function showPrediction(entry, manifestById) {
   els.predStage.hidden = false;
   const img = els.predPhoto;
+  const { gt, preds } = boxesForEntry(entry, manifestById);
   img.onload = () => {
     const canvas = els.predCanvas;
     canvas.width = img.naturalWidth;
@@ -237,11 +291,19 @@ async function showPrediction(entry) {
     canvas.style.height = "auto";
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const gt = semanticColor("--nl-success", "#2F6B4F");
-    const pred = semanticColor("--nl-warning", "#8A6A1F");
-    drawBoxes(ctx, entry.gt || [], gt, "yours ", canvas.width, canvas.height);
-    drawBoxes(ctx, entry.preds || entry.boxes || [], pred, "model ", canvas.width, canvas.height);
+    // Bright overlays so they read on snow / low-contrast photos.
+    const gtColor = "#1DBF73";
+    const predColor = "#F5A524";
+    drawBoxes(ctx, gt, gtColor, "yours ", canvas.width, canvas.height);
+    drawBoxes(ctx, preds, predColor, "model ", canvas.width, canvas.height);
+    if (!gt.length && !preds.length) {
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "600 18px Archivo, ui-sans-serif, sans-serif";
+      ctx.fillText("No box overlay for this photo (re-train to upload model boxes).", 16, 32);
+    }
   };
+  // Force reload when switching photos with the same cached handler.
+  img.src = "";
   img.src = `/media/${encodeURIComponent(entry.id || entry.image_id)}`;
 }
 
@@ -274,6 +336,13 @@ async function openRun(id) {
   els.detailScores.innerHTML = scoreCards(data.run);
   els.detailHint.textContent = "";
 
+  const manifestImages = Array.isArray(data.manifest?.images) ? data.manifest.images : [];
+  const manifestById = new Map();
+  for (const im of manifestImages) {
+    if (im.id) manifestById.set(im.id, im);
+    if (im.file) manifestById.set(im.file, im);
+  }
+
   const preds = data.preds;
   const entries = Array.isArray(preds)
     ? preds
@@ -288,14 +357,37 @@ async function openRun(id) {
       ...e,
       id: e.id || e.image_id || e.file_id,
       score:
-        (e.false_negatives || 0) * 3 +
-        (e.false_positives || 0) * 2 +
+        (e.false_negatives ?? e.fn ?? 0) * 3 +
+        (e.false_positives ?? e.fp ?? 0) * 2 +
         (1 - (e.best_iou || e.iou || 1)),
     }))
     .sort((a, b) => b.score - a.score);
 
   els.predFilm.innerHTML = "";
   if (!ranked.length) {
+    // Fall back to manifest photos so GT boxes can still be reviewed.
+    if (manifestImages.length) {
+      for (const im of manifestImages.slice(0, 40)) {
+        const entry = { id: im.id, file: im.file, gt: im.boxes, preds: [] };
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pred-shot";
+        btn.innerHTML = `
+          <img src="/thumb/${encodeURIComponent(im.id)}" alt="" loading="lazy" />
+          <span>${im.file || im.id}</span>`;
+        btn.addEventListener("click", () => showPrediction(entry, manifestById));
+        btn.addEventListener("dblclick", () => {
+          location.href = `/?id=${encodeURIComponent(im.id)}`;
+        });
+        els.predFilm.appendChild(btn);
+      }
+      showPrediction(
+        { id: manifestImages[0].id, file: manifestImages[0].file, gt: manifestImages[0].boxes, preds: [] },
+        manifestById,
+      );
+      renderRuns();
+      return;
+    }
     els.predFilm.innerHTML =
       data.run.status === "done"
         ? `<p class="empty">No photo comparisons came back with this run.</p>`
@@ -314,14 +406,14 @@ async function openRun(id) {
       <img src="/thumb/${encodeURIComponent(entry.id)}" alt="" loading="lazy" />
       <span>${name}</span>`;
     btn.addEventListener("click", () => {
-      showPrediction(entry);
+      showPrediction(entry, manifestById);
     });
     btn.addEventListener("dblclick", () => {
       location.href = `/?id=${encodeURIComponent(entry.id)}`;
     });
     els.predFilm.appendChild(btn);
   }
-  showPrediction(ranked[0]);
+  showPrediction(ranked[0], manifestById);
   renderRuns();
 }
 
