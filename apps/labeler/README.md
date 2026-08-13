@@ -3,6 +3,7 @@
 Internal upload / label / train-review app for polar bear photos.
 
 - **Worker**: `naturalens-labeler`
+- **Live**: https://skim.naturalens.ca (also `naturalens-labeler.<account>.workers.dev`)
 - **R2**: `naturalens-data` (images + run artifacts)
 - **D1**: `naturalens-labels` (boxes, review flags, run metadata)
 - **Auth**: Cloudflare Access in front of the Worker; Colab uses a shared `TRAIN_TOKEN`
@@ -62,7 +63,8 @@ npx wrangler secret put TRAIN_TOKEN
 npm run deploy
 ```
 
-Worker URL will look like `https://naturalens-labeler.<subdomain>.workers.dev`.
+Custom domain: `https://skim.naturalens.ca` (Workers custom domain on `naturalens.ca`).
+Workers.dev URL still works as a fallback.
 
 ### 5. Put Cloudflare Access in front
 
@@ -90,7 +92,7 @@ Until Access is configured, `AUTH_MODE=optional` lets local `wrangler dev` work 
    - `R2_ACCESS_KEY_ID`
    - `R2_SECRET_ACCESS_KEY`
    - `R2_BUCKET` = `naturalens-data`
-   - `LABELER_URL` = `https://naturalens-labeler.<subdomain>.workers.dev`
+   - `LABELER_URL` = `https://skim.naturalens.ca`
    - `TRAIN_TOKEN` = same as the Worker secret
 
 ## Local development
