@@ -10,13 +10,13 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-white text-wild-dark">
-      <header className="border-b border-black/5 px-6 py-6">
+    <main className="min-h-[100dvh] bg-bg text-fg">
+      <header className="border-b border-border px-6 py-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Logo size={28} />
           <Link
             href="/"
-            className="text-sm font-medium text-wild-gray transition-colors hover:text-wild-dark"
+            className="text-sm font-medium text-muted transition-colors hover:text-fg"
           >
             Back to home
           </Link>
@@ -24,19 +24,19 @@ export default function PrivacyPage() {
       </header>
 
       <article className="mx-auto max-w-3xl px-6 py-16">
-        <p className="mb-3 text-sm font-medium uppercase tracking-wide text-wild-gray">
+        <p className="mb-3 font-[family-name:var(--font-archivo)] text-[11px] font-medium uppercase tracking-[0.14em] text-caption">
           Legal
         </p>
-        <h1 className="mb-3 text-4xl font-bold tracking-tight md:text-5xl">
+        <h1 className="mb-3 font-[family-name:var(--font-outfit)] text-4xl font-light tracking-[-0.025em] md:text-5xl">
           Privacy Policy
         </h1>
-        <p className="mb-12 text-sm text-wild-gray">
+        <p className="mb-12 text-sm text-muted">
           Last updated: August 9, 2026
         </p>
 
-        <div className="space-y-10 text-base leading-relaxed text-wild-dark/90">
+        <div className="space-y-10 text-base leading-relaxed text-fg/90">
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               1. Overview
             </h2>
             <p>
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               2. Information we collect
             </h2>
             <p>Depending on how you use Naturalens, we may collect:</p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               3. How we use information
             </h2>
             <p>We use information to:</p>
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               4. AI processing and third parties
             </h2>
             <p>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               5. Local storage on your device
             </h2>
             <p>
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               6. Retention
             </h2>
             <p>
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               7. Sharing
             </h2>
             <p>We share information only when needed to:</p>
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               8. Your choices
             </h2>
             <ul className="list-disc space-y-2 pl-6">
@@ -179,7 +179,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               9. Children
             </h2>
             <p>
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               10. Security
             </h2>
             <p>
@@ -204,7 +204,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               11. International transfers
             </h2>
             <p>
@@ -216,7 +216,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               12. Changes
             </h2>
             <p>
@@ -227,14 +227,14 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight text-wild-dark">
+            <h2 className="font-[family-name:var(--font-outfit)] text-2xl font-normal tracking-tight text-fg">
               13. Contact
             </h2>
             <p>
               Privacy questions or requests can be sent through the contact
               channels listed on the Naturalens website or in the app. Related
               terms are described in our{" "}
-              <Link href="/terms" className="underline underline-offset-2 hover:text-wild-dark">
+              <Link href="/terms" className="underline underline-offset-2 hover:text-fg">
                 Terms of Service
               </Link>
               .
