@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Upload — NaturaLens labeler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/app.css?v=6" />
+  </head>
+  <body class="page">
+    <header class="top">
+      <div class="brand">
+        <img class="mark" src="/owl.png" width="28" height="28" alt="" />
+        <div>
+          <p class="kicker">NaturaLens field desk</p>
+          <h1>Upload</h1>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="/">Label</a>
+        <a href="/upload.html" aria-current="page">Upload</a>
+        <a href="/runs.html">Runs</a>
+      </nav>
+      <p class="progress" id="progress">Drop photos to add them</p>
+      <p class="quota" id="quota" title="R2 free-tier guard"></p>
+    </header>
+    <main class="page-main">
+      <section class="drop" id="drop">
+        <p class="drop-title">Drop polar bear photos here</p>
+        <p class="drop-sub">JPG / PNG / WEBP · EXIF orientation is fixed on your machine before upload</p>
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp" multiple hidden />
+        <button type="button" class="primary" id="pickBtn">Choose files</button>
+      </section>
+      <section class="queue-wrap">
+        <div class="queue-head">
+          <h2>Queue</h2>
+          <p id="queueStats">0 waiting</p>
+        </div>
+        <ul class="queue" id="queue"></ul>
+      </section>
+    </main>
+    <div class="toast" id="toast" hidden></div>
+    <script src="/quota.js?v=4"></script>
+    <script src="/upload.js?v=4"></script>
+  </body>
+</html>

@@ -74,7 +74,7 @@ There is no server of ours. The app calls Gemini directly.
 | Identification | Gemini API (`gemini-3.1-flash-lite`) |
 | Persistence | `@react-native-async-storage/async-storage` + `expo-file-system` |
 | State | React context — no external state library |
-| Font | Figtree, via `@expo-google-fonts/figtree` |
+| Font | Outfit (display) + Archivo (body/UI), via `@expo-google-fonts/outfit` and `@expo-google-fonts/archivo` |
 
 ### 2.1 Why cloud, not on-device
 
@@ -240,19 +240,28 @@ times — not an edge case.
 
 ## 6. Design system
 
-- **Color** (`src/theme/colors.ts`) — `primary` (forest green) is the *action* color:
-  buttons, active tab. `brand` (deep teal) is the *identity* color: logo, splash, camera
-  surface. Keeping them apart is what stops the camera chrome from reading as a button.
-  `ConservationColors` maps IUCN status to a colour, safe to alarming. `Data Deficient` is
-  grey, not green — "we don't know" is not "it's fine", and colouring it like the latter
-  would be a lie told in a design token.
-- **Type** (`src/theme/spacing.ts`) — Figtree in three weights. Weight comes from the family
-  name (`Figtree_700Bold`), never from `fontWeight`: a custom font exposes each weight as
-  its own family and `fontWeight` can't choose between them. A token naming a fourth weight
-  needs that weight loaded in `App.tsx`, or it silently falls back to the system face.
-- **Launch** — the native splash holds until the fonts resolve, then `BrandSplash` replays
-  the owl mark on the same tan ground, so the two read as one moment rather than two
-  screens.
+Source of truth: [`packages/design/`](../packages/design/). Edit `tokens.json` once,
+regenerate with `node packages/design/build/generate.mjs`, and every surface picks up
+the change. The browsable Volume One spec lives in
+[`apps/design/`](../apps/design/).
+
+- **Color** — chrome is black and white (`bg` / `fg` / `muted` / `caption` / `border` /
+  `surface`). The labeler matches landing polarity (paper white / ink black). Muted
+  semantic hues (`success` / `warning` / `danger`) are allowed **only** on status pills,
+  annotation boxes, and prediction overlays — not page chrome. Conservation badges still
+  prefer **form** (outline vs filled) where hue is unnecessary — see `ConservationForms` in the
+  mobile theme. Confidence is bar fill, not a green/amber spectrum.
+- **Type** — Outfit for display, Archivo for body and UI. Weight comes from the
+  family name on mobile (`Outfit_200ExtraLight`, `Archivo_500Medium`); never from
+  `fontWeight`. `RequiredFontFamilies` in the generated tokens lists every family
+  the ramp names — that list is what `useFonts` loads.
+- **Radius** — full-pill belongs to one primary action per screen. Inputs are 2px;
+  panels are 8px; media is square.
+- **Mark** — line owl on a 32 grid, 2px stroke (`packages/design/mark/owl.svg`).
+  Use the 2.5px variant under 40px. Brand rasters are built by
+  `python3 tools/brand/build-brand.py`.
+- **Launch** — the native splash and `BrandSplash` share white ground and the same
+  mark, so the two read as one moment rather than two screens.
 
 ---
 

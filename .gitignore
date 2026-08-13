@@ -6,6 +6,9 @@ node_modules/
 # Build outputs
 dist/
 build/
+# Keep the design token generator (not a build artifact)
+!packages/design/build/
+!packages/design/build/**
 .next/
 .nuxt/
 .output/

@@ -1,0 +1,72 @@
+/* GENERATED — do not edit. Source: packages/design/tokens.json. Run: node packages/design/build/generate.mjs */
+
+:root {
+  --nl-bg: #FFFFFF;
+  --nl-fg: #000000;
+  --nl-muted: #666666;
+  --nl-caption: #999999;
+  --nl-border: #E5E5E5;
+  --nl-surface: #F5F5F5;
+
+  /* Status / overlay only — do not use for page chrome */
+  --nl-success: #2F6B4F;
+  --nl-success-soft: #E8F2EC;
+  --nl-warning: #8A6A1F;
+  --nl-warning-soft: #F5F0E0;
+  --nl-danger: #8B3A3A;
+  --nl-danger-soft: #F5E8E8;
+
+  --nl-space-hairline: 4px;
+  --nl-space-xs: 8px;
+  --nl-space-s: 16px;
+  --nl-space-m: 24px;
+  --nl-space-l: 40px;
+  --nl-space-xl: 64px;
+  --nl-space-xxl: 96px;
+  --nl-space-xxxl: 160px;
+
+  --nl-radius-media: 0px;
+  --nl-radius-input: 2px;
+  --nl-radius-panel: 8px;
+  --nl-radius-cta: 999px;
+
+  --nl-motion-enter: 480ms;
+  --nl-motion-state: 220ms;
+  --nl-motion-stagger: 60ms;
+  --nl-motion-rise: 8px;
+  --nl-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --nl-focus-width: 2px;
+  --nl-focus-offset: 3px;
+}
+
+[data-theme="inverted"] {
+  --nl-bg: #000000;
+  --nl-fg: #FFFFFF;
+  --nl-muted: #999999;
+  --nl-caption: #666666;
+  --nl-border: #222222;
+  --nl-surface: #111111;
+}
+
+:root { --nl-type-display-size: clamp(46px, 4.688vw + 46px, 104px); }
+:root { --nl-type-h1-size: clamp(34px, 2.813vw + 34px, 56px); }
+:root { --nl-type-h2-size: clamp(28px, 2.000vw + 28px, 36px); }
+:root { --nl-type-h3-size: clamp(18px, 1.188vw + 18px, 20px); }
+:root { --nl-type-body-size: clamp(16px, 1.031vw + 16px, 17px); }
+:root { --nl-type-small-size: 14px; }
+:root { --nl-type-label-size: clamp(11px, 0.719vw + 11px, 12px); }
+:root { --nl-type-button-size: 15px; }
+/* Legacy aliases — map old labeler names onto Volume One tokens */
+:root, [data-theme="inverted"] {
+  --ice: var(--nl-bg);
+  --panel: var(--nl-surface);
+  --panel-2: color-mix(in srgb, var(--nl-surface) 80%, var(--nl-fg) 8%);
+  --line: color-mix(in srgb, var(--nl-fg) 12%, transparent);
+  --mist: var(--nl-muted);
+  --paper: var(--nl-fg);
+  --shadow: none;
+  --ok: var(--nl-success);
+  --warn: var(--nl-warning);
+  --danger: var(--nl-danger);
+}
