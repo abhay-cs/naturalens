@@ -1,10 +1,13 @@
 # Polar bear photos (local)
 
-Drop a zip of field photos here. They stay on the machine — git ignores the zip and extracted images.
+Drop a zip of field photos here, or pass `--zip`. Photos stay gitignored.
 
 ```bash
-# from repo root, after the zip is in this folder
-python3 models/evaluation/auto_box_polar_bears.py
+python3.12 -m venv models/.venv
+source models/.venv/bin/activate
+pip install -r models/evaluation/requirements-autobox.txt
+python3 models/evaluation/auto_box_polar_bears.py --zip ~/Downloads/PolarBearphotos-1-001.zip
 ```
 
-That uses a COCO-pretrained detector (`bear`) to propose boxes, writes YOLO labels plus a JSON, and draws preview images so you can skim mistakes.
+Uses Mask R-CNN ResNet-50 on the Apple GPU, two scales, and a flip pass. Open `previews/` to skim mistakes.
+
