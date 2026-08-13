@@ -94,4 +94,6 @@ tools/brand/.fonts/
 models/.venv-train/
 .wrangler/
 
-apps/labeler/.dev.vars*
+apps/labeler/.dev.vars
+apps/labeler/.dev.vars.remote
+
