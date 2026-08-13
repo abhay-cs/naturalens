@@ -117,7 +117,12 @@ def load_detector():
     )
 
     weights = MaskRCNN_ResNet50_FPN_V2_Weights.DEFAULT
-    model = maskrcnn_resnet50_fpn_v2(weights=weights, box_score_thresh=0.0)
+    model = maskrcnn_resnet50_fpn_v2(
+        weights=weights,
+        box_score_thresh=0.0,
+        box_nms_thresh=0.75,
+        box_detections_per_img=100,
+    )
     model.eval()
     device = pick_device()
     model.to(device)
@@ -170,7 +175,7 @@ def _collect(out, min_score: float, width: int, height: int, flip: bool):
     return found
 
 
-def nms(dets: list[dict], iou_thresh: float = 0.5) -> list[dict]:
+def nms(dets: list[dict], iou_thresh: float = 0.75) -> list[dict]:
     import torch
     from torchvision.ops import nms as tv_nms
 
@@ -179,25 +184,51 @@ def nms(dets: list[dict], iou_thresh: float = 0.5) -> list[dict]:
     boxes = torch.tensor([d["xyxy"] for d in dets], dtype=torch.float32)
     scores = torch.tensor([d["score"] for d in dets], dtype=torch.float32)
     keep = tv_nms(boxes, scores, iou_thresh).tolist()
-    kept = [dets[i] for i in keep]
-    return suppress_nested(kept, contain=0.5)
+    return [dets[i] for i in keep]
 
 
 def _area(xyxy: list[float]) -> float:
     return max(0.0, xyxy[2] - xyxy[0]) * max(0.0, xyxy[3] - xyxy[1])
 
 
-def suppress_nested(dets: list[dict], contain: float = 0.7) -> list[dict]:
-    """Drop a box that mostly sits inside a higher-scoring one (heads, paws)."""
+def _box_iou(a: list[float], b: list[float]) -> float:
+    ax1, ay1, ax2, ay2 = a
+    bx1, by1, bx2, by2 = b
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+    union = _area(a) + _area(b) - inter
+    return inter / union if union > 0 else 0.0
+
+
+def _mask_array(det: dict):
+    import numpy as np
+
+    mask = det.get("mask")
+    if mask is None:
+        return None
+    arr = mask.numpy() if hasattr(mask, "numpy") else np.asarray(mask)
+    return (arr > 0).astype(np.uint8)
+
+
+def _center(xyxy: list[float]) -> tuple[float, float]:
+    return (xyxy[0] + xyxy[2]) / 2, (xyxy[1] + xyxy[3]) / 2
+
+
+def suppress_nested(dets: list[dict], contain: float = 0.65, max_inner: float = 0.55) -> list[dict]:
+    """Drop heads/paws inside a larger bear. Keep similar-sized overlapping bears."""
     remaining = sorted(dets, key=lambda d: d["score"], reverse=True)
     kept: list[dict] = []
     for det in remaining:
-        x1, y1, x2, y2 = det["xyxy"]
         area = _area(det["xyxy"])
         if area <= 0:
             continue
+        x1, y1, x2, y2 = det["xyxy"]
         nested = False
         for parent in kept:
+            parent_area = _area(parent["xyxy"])
+            if parent_area <= 0 or area / parent_area > max_inner:
+                continue
             px1, py1, px2, py2 = parent["xyxy"]
             ix1, iy1 = max(x1, px1), max(y1, py1)
             ix2, iy2 = min(x2, px2), min(y2, py2)
@@ -208,6 +239,271 @@ def suppress_nested(dets: list[dict], contain: float = 0.7) -> list[dict]:
         if not nested:
             kept.append(det)
     return kept
+
+
+def drop_covering_parents(dets: list[dict], peer_frac: float = 0.35, parent_scale: float = 1.5) -> list[dict]:
+    """Drop a merged box that contains two smaller, similar-sized bears."""
+    if len(dets) < 3:
+        return dets
+    kept = []
+    for i, det in enumerate(dets):
+        x1, y1, x2, y2 = det["xyxy"]
+        parent_area = _area(det["xyxy"])
+        inside = 0
+        for j, other in enumerate(dets):
+            if i == j or parent_area <= 0:
+                continue
+            child_area = _area(other["xyxy"])
+            if child_area / parent_area < peer_frac:
+                continue
+            if parent_area < parent_scale * child_area:
+                continue
+            if other["score"] < 0.85 * det["score"]:
+                continue
+            cx, cy = _center(other["xyxy"])
+            if x1 <= cx <= x2 and y1 <= cy <= y2:
+                inside += 1
+        if inside < 2:
+            kept.append(det)
+    return kept or dets
+
+
+def suppress_contained_weaker(dets: list[dict], contain: float = 0.55, score_frac: float = 0.8) -> list[dict]:
+    """Drop a weaker box that mostly sits inside a stronger one (split shards, not huddle peers)."""
+    remaining = sorted(dets, key=lambda d: d["score"], reverse=True)
+    kept: list[dict] = []
+    for det in remaining:
+        area = _area(det["xyxy"])
+        if area <= 0:
+            continue
+        x1, y1, x2, y2 = det["xyxy"]
+        weaker = False
+        for parent in kept:
+            if det["score"] >= score_frac * parent["score"]:
+                continue
+            px1, py1, px2, py2 = parent["xyxy"]
+            ix1, iy1 = max(x1, px1), max(y1, py1)
+            ix2, iy2 = min(x2, px2), min(y2, py2)
+            inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+            if inter / area >= contain:
+                weaker = True
+                break
+        if not weaker:
+            kept.append(det)
+    return kept
+
+
+def drop_weak_overlaps(dets: list[dict], min_score: float = 0.55, overlap: float = 0.18) -> list[dict]:
+    """Drop low-score leftovers that sit on a high-confidence bear."""
+    strong = [d for d in dets if d["score"] >= 0.9]
+    if not strong:
+        return dets
+    kept = []
+    for det in dets:
+        if det["score"] >= min_score:
+            kept.append(det)
+            continue
+        if any(_box_iou(det["xyxy"], s["xyxy"]) >= overlap for s in strong):
+            continue
+        kept.append(det)
+    return kept
+
+
+def drop_slivers(dets: list[dict], max_aspect: float = 0.42) -> list[dict]:
+    """Drop thin leftover shards that sit between overlapping bears."""
+    if len(dets) <= 1:
+        return dets
+    kept = []
+    for det in dets:
+        x1, y1, x2, y2 = det["xyxy"]
+        w, h = max(1.0, x2 - x1), max(1.0, y2 - y1)
+        if w / h < max_aspect:
+            overlapping = any(
+                other is not det and _box_iou(det["xyxy"], other["xyxy"]) > 0.05
+                for other in dets
+            )
+            if overlapping:
+                continue
+        kept.append(det)
+    return kept
+
+
+def drop_fragments(dets: list[dict], min_frac: float = 0.22, overlap: float = 0.28) -> list[dict]:
+    """Drop leftover split shards that sit on a larger bear. Keep distant small bears."""
+    remaining = sorted(dets, key=lambda d: _area(d["xyxy"]), reverse=True)
+    kept: list[dict] = []
+    for det in remaining:
+        area = _area(det["xyxy"])
+        fragment = False
+        for parent in kept:
+            parent_area = _area(parent["xyxy"])
+            if parent_area <= 0 or area / parent_area > min_frac:
+                continue
+            inter_frac = 0.0
+            iou = _box_iou(det["xyxy"], parent["xyxy"])
+            x1, y1, x2, y2 = det["xyxy"]
+            px1, py1, px2, py2 = parent["xyxy"]
+            ix1, iy1 = max(x1, px1), max(y1, py1)
+            ix2, iy2 = min(x2, px2), min(y2, py2)
+            inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+            if area > 0:
+                inter_frac = inter / area
+            if iou >= overlap or inter_frac >= 0.45:
+                fragment = True
+                break
+        if not fragment:
+            kept.append(det)
+    return kept
+
+
+def mask_nms(dets: list[dict], mask_iou: float = 0.55, box_iou: float = 0.58) -> list[dict]:
+    """Collapse TTA duplicates and body-part boxes that share the same silhouette."""
+    import numpy as np
+
+    remaining = sorted(dets, key=lambda d: d["score"], reverse=True)
+    kept: list[dict] = []
+    masks = []
+    for det in remaining:
+        m = _mask_array(det)
+        dup = False
+        for parent, pm in zip(kept, masks):
+            if _box_iou(det["xyxy"], parent["xyxy"]) >= box_iou:
+                dup = True
+                break
+            if m is not None and pm is not None:
+                inter = int(np.logical_and(m, pm).sum())
+                union = int(np.logical_or(m, pm).sum())
+                iou = inter / union if union else 0.0
+                if iou >= mask_iou:
+                    dup = True
+                    break
+        if not dup:
+            kept.append(det)
+            masks.append(m)
+    return kept
+
+
+def _box_from_mask(mask) -> list[float] | None:
+    import numpy as np
+
+    ys, xs = np.where(mask > 0)
+    if len(xs) < 40:
+        return None
+    return [float(xs.min()), float(ys.min()), float(xs.max() + 1), float(ys.max() + 1)]
+
+
+def split_merged_masks(dets: list[dict], depth: int = 0) -> list[dict]:
+    """Split a silhouette that covers huddled bears into separate instances."""
+    import numpy as np
+    import torch
+    from scipy.ndimage import (
+        binary_opening,
+        distance_transform_edt,
+        label,
+        maximum_filter,
+    )
+
+    split: list[dict] = []
+    for det in dets:
+        mask = det.get("mask")
+        if mask is None:
+            split.append(det)
+            continue
+        arr = mask.numpy() if hasattr(mask, "numpy") else np.asarray(mask)
+        arr = (arr > 0).astype(np.uint8)
+        total = int(arr.sum())
+        if total < 80:
+            split.append(det)
+            continue
+
+        opened = binary_opening(arr, iterations=2)
+        labeled, n = label(opened)
+        parts = []
+        x1, y1, x2, y2 = det["xyxy"]
+        bw, bh = max(1.0, x2 - x1), max(1.0, y2 - y1)
+        if n >= 2 and bw / bh >= 1.35 and det["score"] >= 0.75:
+            for idx in range(1, n + 1):
+                piece = (labeled == idx).astype(np.uint8)
+                if piece.sum() >= 0.28 * total:
+                    parts.append(piece)
+            if len(parts) >= 2:
+                centroids = []
+                for piece in parts:
+                    ys, xs = np.where(piece > 0)
+                    centroids.append((float(xs.mean()), float(ys.mean())))
+                dx = abs(centroids[0][0] - centroids[1][0])
+                dy = abs(centroids[0][1] - centroids[1][1])
+                if dx < 0.22 * bw or dx < dy:
+                    parts = []
+
+        if len(parts) < 2:
+            # Only split when the silhouette is wide (side-by-side huddle),
+            # not a single sitting bear (head stacked on torso).
+            if bw / bh < 1.35 or det["score"] < 0.75:
+                split.append(det)
+                continue
+            dist = distance_transform_edt(arr)
+            if dist.max() < 6:
+                split.append(det)
+                continue
+            min_sep = max(14, int(0.22 * bw))
+            peaks = (dist == maximum_filter(dist, size=min_sep)) & (dist > 0.4 * dist.max())
+            peak_label, n_peaks = label(peaks)
+            if n_peaks < 2:
+                split.append(det)
+                continue
+            coords = []
+            for idx in range(1, n_peaks + 1):
+                ys, xs = np.where(peak_label == idx)
+                coords.append((float(dist[ys, xs].max()), int(ys[0]), int(xs[0])))
+            coords.sort(reverse=True)
+            seeds = []
+            for cand in coords:
+                if all(abs(cand[2] - s[2]) >= min_sep * 0.65 for s in seeds):
+                    seeds.append(cand)
+                if len(seeds) >= 3:
+                    break
+            if len(seeds) < 2:
+                split.append(det)
+                continue
+            if len(seeds) == 2:
+                dy = abs(seeds[0][1] - seeds[1][1])
+                dx = abs(seeds[0][2] - seeds[1][2])
+                if dx < min_sep * 0.65 or dx < dy:
+                    split.append(det)
+                    continue
+            yy, xx = np.indices(arr.shape)
+            dmaps = [(yy - s[1]) ** 2 + (xx - s[2]) ** 2 for s in seeds]
+            nearest = np.stack(dmaps, axis=0).argmin(axis=0) + 1
+            regions = np.where(arr > 0, nearest, 0)
+            parts = []
+            min_part = 0.18 if len(seeds) == 2 else 0.14
+            for idx in range(1, len(seeds) + 1):
+                piece = (regions == idx).astype(np.uint8)
+                if piece.sum() >= min_part * total:
+                    parts.append(piece)
+
+        if len(parts) < 2:
+            split.append(det)
+            continue
+
+        children = []
+        for piece in parts:
+            box = _box_from_mask(piece)
+            if box is None:
+                continue
+            children.append(
+                {
+                    "xyxy": box,
+                    "score": float(det["score"]) * 0.98,
+                    "mask": torch.from_numpy(piece),
+                }
+            )
+        if depth < 2 and len(children) >= 2:
+            split.extend(split_merged_masks(children, depth=depth + 1))
+        else:
+            split.extend(children)
+    return split
 
 
 def detect_bears(model, transform, device, image: Image.Image, min_score: float):
@@ -224,7 +520,16 @@ def detect_bears(model, transform, device, image: Image.Image, min_score: float)
         dets.extend(_collect(out_f, min_score, width, height, flip=True))
 
     dets.sort(key=lambda d: d["score"], reverse=True)
-    return nms(dets, iou_thresh=0.5)
+    kept = nms(dets, iou_thresh=0.75)
+    kept = suppress_nested(kept, contain=0.7, max_inner=0.35)
+    kept = split_merged_masks(kept)
+    kept = drop_covering_parents(kept)
+    kept = mask_nms(kept)
+    kept = drop_fragments(kept)
+    kept = drop_slivers(kept)
+    kept = drop_weak_overlaps(kept)
+    kept = suppress_contained_weaker(kept)
+    return suppress_nested(kept)
 
 
 def to_yolo(xyxy: list[float], width: int, height: int) -> str:
@@ -308,21 +613,39 @@ def main() -> None:
     parser.add_argument("--min-score", type=float, default=0.2)
     parser.add_argument("--val-count", type=int, default=20)
     parser.add_argument("--seed", type=int, default=13)
+    parser.add_argument("--only", nargs="*", help="Only these filenames or stems, e.g. IMG_0243 IMG_0255")
+    parser.add_argument("--reuse-images", action="store_true", help="Use models/data/images/ instead of re-extracting")
     args = parser.parse_args()
 
     DATA.mkdir(parents=True, exist_ok=True)
-    zip_path = find_zip(args.zip)
-    print(f"Extracting {zip_path.name} …", flush=True)
-    images = extract_images(zip_path)
+    zip_path = None
+    if args.reuse_images and any(IMAGES.glob("*")):
+        images = sorted(
+            p for p in IMAGES.iterdir() if p.suffix.lower() in IMAGE_SUFFIXES
+        )
+        print(f"Reusing {len(images)} images in {IMAGES}", flush=True)
+    else:
+        zip_path = find_zip(args.zip)
+        print(f"Extracting {zip_path.name} …", flush=True)
+        images = extract_images(zip_path)
+
     kept = []
     for path in images:
         with ImageOps.exif_transpose(Image.open(path)) as im:
             if min(im.size) < MIN_IMAGE_EDGE:
-                path.unlink()
+                if not args.reuse_images:
+                    path.unlink()
                 continue
         kept.append(path)
     images = kept
-    print(f"{len(images)} full-size photos")
+
+    if args.only:
+        wanted = {s.lower().removesuffix(".jpg").removesuffix(".jpeg") for s in args.only}
+        images = [p for p in images if p.stem.lower() in wanted or p.name.lower() in {s.lower() for s in args.only}]
+        if not images:
+            raise SystemExit(f"No images matched --only {args.only}")
+
+    print(f"{len(images)} photos to box", flush=True)
 
     print("Loading COCO Mask R-CNN ResNet-50 FPN v2 …")
     model, transform, device = load_detector()
@@ -367,16 +690,29 @@ def main() -> None:
         if dets:
             hits += 1
             total_boxes += len(dets)
-        print(f"[{i}/{len(images)}] {path.name}: {len(dets)} bear(s)")
+        print(f"[{i}/{len(images)}] {path.name}: {len(dets)} bear(s)", flush=True)
+
+    if args.only and (DATA / "annotations.json").exists():
+        existing = json.loads((DATA / "annotations.json").read_text())
+        by_file = {im["file"]: im for im in existing["images"]}
+        for rec in records:
+            by_file[rec["file"]] = rec
+        records = [by_file[k] for k in sorted(by_file)]
+        zip_name = existing.get("source_zip", "")
+        hits = sum(1 for r in records if r["boxes"])
+        total_boxes = sum(len(r["boxes"]) for r in records)
+    else:
+        zip_name = zip_path.name if zip_path else ""
 
     annotations = {
-        "source_zip": zip_path.name,
+        "source_zip": zip_name,
         "detector": "torchvision.maskrcnn_resnet50_fpn_v2",
         "coco_class": "bear",
         "device": str(device),
         "scales": list(SCALES),
         "tta": ["hflip"],
         "min_score": args.min_score,
+        "huddle_split": True,
         "images": records,
         "summary": {
             "images": len(records),

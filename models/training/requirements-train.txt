@@ -1,0 +1,13 @@
+# Polar-bear detector training (PyTorch SSDLite → ONNX → TFLite).
+# EfficientDet-Lite via MediaPipe Model Maker needs TensorFlow <2.16 (no py3.12 wheels).
+torch>=2.1
+torchvision>=0.16
+Pillow
+numpy
+pycocotools
+onnx
+onnxscript
+
+# Optional TFLite conversion (heavy; use models/.venv-train):
+#   tensorflow==2.19.0
+#   onnx2tf
