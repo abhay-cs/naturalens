@@ -31,6 +31,9 @@ venv/
 .venv/
 env/
 
+# Raw training images (local / R2, not git)
+models/data/
+
 # ML model weights (store in cloud, not git)
 *.tflite
 *.onnx

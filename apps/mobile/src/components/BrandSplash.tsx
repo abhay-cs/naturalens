@@ -11,8 +11,8 @@ import { Colors } from '../theme/colors';
 /** How much of the screen's height the owl fills. */
 const MARK_HEIGHT = 0.42;
 
-/** The mark is tall and narrow — cropped tight to the ink (652×1200). */
-const MARK_ASPECT = 652 / 1200;
+/** The mark is cropped tight to the ink (672×896). */
+const MARK_ASPECT = 672 / 896;
 
 /** Time the mark holds at full size before handing off to the app. */
 const HOLD_MS = 600;

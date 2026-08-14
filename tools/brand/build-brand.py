@@ -31,9 +31,8 @@ WEB_APP = ROOT / "apps" / "web" / "src" / "app"
 WEB_PUBLIC = ROOT / "apps" / "web" / "public"
 FONTS_DIR = Path(__file__).resolve().parent / ".fonts"
 
-AMBER = (0xEE, 0xAE, 0x34, 255)
 SPLASH_BG = (0xFA, 0xFA, 0xF8, 255)
-MARK_ASPECT = 652 / 1200  # 0.5433
+MARK_ASPECT = 672 / 896  # 0.75
 
 
 def which(cmd: str) -> str:
@@ -150,8 +149,8 @@ def splash_icon(size: int = 1024) -> Image.Image:
 
 
 def mark_png() -> Image.Image:
-    """Tight-cropped transparent mark at native 652x1200."""
-    return render_svg(BRAND_SVG, width=652, height=1200, color="#000000")
+    """Tight-cropped transparent mark at native 672x896 (2× for crisp splash)."""
+    return render_svg(BRAND_SVG, width=1344, height=1792, color="#000000")
 
 
 def favicon_png(size: int = 48) -> Image.Image:
@@ -317,13 +316,11 @@ def main() -> None:
     mw = mh * MARK_ASPECT
     tx = (512 - mw) / 2
     ty = (512 - mh) / 2
-    sx = mw / 652
+    sx = mw / 672
     square = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <g transform="translate({tx:.3f} {ty:.3f}) scale({sx:.6f})">
     <path fill="#000000" fill-rule="evenodd" d="{path_d}"/>
-    <circle cx="150.401" cy="356.476" r="56" fill="#EEAE34"/>
-    <circle cx="496.035" cy="356.341" r="56" fill="#EEAE34"/>
   </g>
 </svg>
 '''
