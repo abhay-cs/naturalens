@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Directory, File, Paths } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import type { Detection, HistoryEntry, SpeciesInfo } from '../types';
+import type { Detection, FindLocation, HistoryEntry, SpeciesInfo } from '../types';
 
 /** Versioned so a future schema change can migrate rather than misread old data. */
 const STORAGE_KEY = 'naturalens-history-v1';
@@ -79,10 +79,17 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
   }
 }
 
-/** Saves a detection, writing its photo somewhere the OS won't reclaim. */
+/**
+ * Saves a detection, writing its photo somewhere the OS won't reclaim.
+ *
+ * `location` is passed in rather than resolved here: it has to be read at the moment of
+ * capture, not at the moment of save, and the caller is the only one who knows the
+ * difference. Undefined is a perfectly ordinary value — see `src/lib/location.ts`.
+ */
 export async function addHistoryEntry(
   detection: Detection,
-  capturedPhotoUri: string
+  capturedPhotoUri: string,
+  location?: FindLocation
 ): Promise<HistoryEntry> {
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -103,6 +110,7 @@ export async function addHistoryEntry(
     thumbUri: thumb.uri,
     timestamp: Date.now(),
     info: detection.info,
+    location,
   };
 
   const history = [entry, ...(await loadHistory())];

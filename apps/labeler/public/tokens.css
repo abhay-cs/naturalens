@@ -11,10 +11,13 @@
   /* Status / overlay only — do not use for page chrome */
   --nl-success: #2F6B4F;
   --nl-success-soft: #E8F2EC;
+  --nl-success-border: #B9D2C4;
   --nl-warning: #8A6A1F;
   --nl-warning-soft: #F5F0E0;
+  --nl-warning-border: #D6C48F;
   --nl-danger: #8B3A3A;
   --nl-danger-soft: #F5E8E8;
+  --nl-danger-border: #D4A9A9;
 
   --nl-space-hairline: 4px;
   --nl-space-xs: 8px;

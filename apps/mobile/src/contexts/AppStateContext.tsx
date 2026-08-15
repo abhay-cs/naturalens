@@ -4,10 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
-import type { Detection, HistoryEntry } from '../types';
+import type { Detection, FindLocation, HistoryEntry } from '../types';
 import {
   addHistoryEntry as persistHistoryEntry,
   deleteHistoryEntry as persistDeleteHistoryEntry,
@@ -16,33 +17,134 @@ import {
   loadHistory,
 } from '../lib/history';
 import { fetchSpeciesInfo } from '../lib/detector';
+import { useNetworkOnline } from '../lib/network';
+import type { BannerTone } from '../components/Banner';
 
-export type TabId = 'camera' | 'history';
+export type TabId = 'camera' | 'finds' | 'map';
+
+export interface StatusBanner {
+  id: string;
+  tone: BannerTone;
+  message: string;
+}
+
+/** How long a self-resolving banner ("Back online.") stays up before clearing itself. */
+const TRANSIENT_BANNER_MS = 4000;
+
+/** Stable id for the connectivity banner, so a flapping radio replaces rather than stacks. */
+const NETWORK_BANNER_ID = 'network';
 
 interface AppStateContextValue {
   activeTab: TabId;
   setActiveTab: (id: TabId) => void;
-  initError: string | null;
-  setInitError: (v: string | null) => void;
+  /** Status messages stacked under the header. Newest last. */
+  banners: StatusBanner[];
+  pushBanner: (message: string, tone?: BannerTone, options?: { id?: string; transient?: boolean }) => void;
+  dismissBanner: (id: string) => void;
+  /** Whether the radio thinks we can reach the network. Advisory — see `lib/network.ts`. */
+  networkOnline: boolean;
   history: HistoryEntry[];
   historyLoading: boolean;
-  addHistoryEntry: (detection: Detection, photoUri: string) => Promise<void>;
+  addHistoryEntry: (
+    detection: Detection,
+    photoUri: string,
+    location?: FindLocation,
+  ) => Promise<void>;
   deleteHistoryEntry: (id: string) => Promise<void>;
   /** Looks up the species details of a find saved before we fetched them. */
   backfillSpeciesInfo: (id: string, label: string) => Promise<void>;
   /** The find open in the detail view, if any. */
   selectedEntry: HistoryEntry | null;
   setSelectedEntryId: (id: string | null) => void;
+  /** The find whose pin is selected on the map, if any. */
+  selectedPin: HistoryEntry | null;
+  setSelectedPinId: (id: string | null) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<TabId>('camera');
-  const [initError, setInitError] = useState<string | null>(null);
+  const [banners, setBanners] = useState<StatusBanner[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
+
+  const networkOnline = useNetworkOnline();
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+
+  const dismissBanner = useCallback((id: string) => {
+    const timer = timers.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timers.current.delete(id);
+    }
+    setBanners((prev) => prev.filter((banner) => banner.id !== id));
+  }, []);
+
+  /**
+   * Adding a banner with an `id` that's already up replaces it. That's what keeps a
+   * flapping connection from stacking six copies of the same sentence.
+   */
+  const pushBanner = useCallback<AppStateContextValue['pushBanner']>(
+    (message, tone = 'neutral', options) => {
+      const id = options?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      const existing = timers.current.get(id);
+      if (existing) {
+        clearTimeout(existing);
+        timers.current.delete(id);
+      }
+
+      setBanners((prev) => [...prev.filter((banner) => banner.id !== id), { id, tone, message }]);
+
+      if (options?.transient) {
+        timers.current.set(
+          id,
+          setTimeout(() => {
+            timers.current.delete(id);
+            setBanners((prev) => prev.filter((banner) => banner.id !== id));
+          }, TRANSIENT_BANNER_MS),
+        );
+      }
+    },
+    [],
+  );
+
+  // Clear pending dismissals on unmount so a timer can't fire into a dead provider.
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+      pending.clear();
+    };
+  }, []);
+
+  /**
+   * Announce connectivity, but only once we've seen it change.
+   *
+   * A first render that happens to be offline shouldn't open with an accusation, and
+   * "Back online" makes no sense as the first thing the app ever says — so the initial
+   * state is recorded silently and only transitions speak.
+   */
+  const lastOnline = useRef<boolean | null>(null);
+  useEffect(() => {
+    const previous = lastOnline.current;
+    lastOnline.current = networkOnline;
+
+    if (previous === null || previous === networkOnline) return;
+
+    if (networkOnline) {
+      pushBanner('Back online.', 'success', { id: NETWORK_BANNER_ID, transient: true });
+    } else {
+      pushBanner(
+        "You're offline. Saved finds are still here — identifying needs a connection.",
+        'neutral',
+        { id: NETWORK_BANNER_ID },
+      );
+    }
+  }, [networkOnline, pushBanner]);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,11 +184,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addHistoryEntry = useCallback(
-    async (detection: Detection, photoUri: string) => {
-      const entry = await persistHistoryEntry(detection, photoUri);
+    async (detection: Detection, photoUri: string, location?: FindLocation) => {
+      const entry = await persistHistoryEntry(detection, photoUri, location);
       setHistory((prev) => [entry, ...prev]);
     },
-    []
+    [],
   );
 
   const deleteHistoryEntry = useCallback(async (id: string) => {
@@ -104,19 +206,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setHistory((prev) => prev.map((entry) => (entry.id === id ? updated : entry)));
   }, []);
 
-  // Derived from the id rather than held as its own entry, so deleting the open find
-  // closes the detail view on its own.
+  // Both selections are derived from an id rather than held as their own entry, so
+  // deleting a find closes the detail view and drops its pin selection on its own.
   const selectedEntry = useMemo(
     () => history.find((entry) => entry.id === selectedEntryId) ?? null,
-    [history, selectedEntryId]
+    [history, selectedEntryId],
+  );
+
+  const selectedPin = useMemo(
+    () => history.find((entry) => entry.id === selectedPinId) ?? null,
+    [history, selectedPinId],
   );
 
   const value: AppStateContextValue = useMemo(
     () => ({
       activeTab,
       setActiveTab,
-      initError,
-      setInitError,
+      banners,
+      pushBanner,
+      dismissBanner,
+      networkOnline,
       history,
       historyLoading,
       addHistoryEntry,
@@ -124,22 +233,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       backfillSpeciesInfo,
       selectedEntry,
       setSelectedEntryId,
+      selectedPin,
+      setSelectedPinId,
     }),
     [
       activeTab,
-      initError,
+      banners,
+      pushBanner,
+      dismissBanner,
+      networkOnline,
       history,
       historyLoading,
       addHistoryEntry,
       deleteHistoryEntry,
       backfillSpeciesInfo,
       selectedEntry,
-    ]
+      selectedPin,
+    ],
   );
 
-  return (
-    <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
-  );
+  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }
 
 export function useAppState(): AppStateContextValue {

@@ -1,15 +1,24 @@
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Colors } from '../theme/colors';
-import { Typography } from '../theme/spacing';
+import { Colors, SemanticColors, Spacing, BorderRadii, Typography } from '../theme/tokens';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'destructive';
 
 interface ButtonProps {
   title: string;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary' | 'glass' | 'danger';
+  variant?: ButtonVariant;
   disabled?: boolean;
   style?: ViewStyle;
 }
 
+/**
+ * The four actions Volume One draws.
+ *
+ * `primary` is the only pill on a screen — that's the radius rule from
+ * `packages/design/README.md`, and it's what makes "Save Discovery" or "Grant permission"
+ * unmistakable without needing a colour the system doesn't have. Everything secondary is
+ * rectangular or plain text.
+ */
 export function Button({
   title,
   onPress,
@@ -19,58 +28,53 @@ export function Button({
 }: ButtonProps) {
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        variant === 'primary' && styles.primary,
-        variant === 'secondary' && styles.secondary,
-        variant === 'glass' && styles.glass,
-        variant === 'danger' && styles.danger,
-        disabled && styles.disabled,
-        style,
-      ]}
+      style={[styles.base, styles[variant], disabled && styles.disabled, style]}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.8}
+      accessibilityRole="button"
+      activeOpacity={0.75}
     >
-      <Text
-        style={[
-          styles.text,
-          variant === 'primary' && styles.textPrimary,
-          variant === 'secondary' && styles.textSecondary,
-          variant === 'glass' && styles.textGlass,
-          variant === 'danger' && styles.textDanger,
-        ]}
-      >
-        {title}
-      </Text>
+      <Text style={[styles.label, labelStyles[variant]]}>{title}</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 30,
+  base: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primary: { backgroundColor: Colors.primary },
+  primary: {
+    height: 54,
+    borderRadius: BorderRadii.pill,
+    backgroundColor: Colors.fg,
+  },
   secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.primary,
+    height: 54,
+    borderRadius: BorderRadii.pill,
+    backgroundColor: Colors.bg,
+    borderWidth: 1,
+    borderColor: Colors.fg,
   },
-  glass: { backgroundColor: Colors.white },
-  danger: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.error,
+  // No chrome at all — "Retake" under the primary pill, "Delete find" under a panel.
+  quiet: {
+    paddingVertical: Spacing.m,
   },
-  disabled: { opacity: 0.6 },
-  text: Typography.subtitle,
-  textPrimary: { color: Colors.white },
-  textSecondary: { color: Colors.primary },
-  textGlass: { color: Colors.textPrimary },
-  textDanger: { color: Colors.error },
+  destructive: {
+    paddingVertical: Spacing.m,
+  },
+  disabled: {
+    opacity: 0.4,
+  },
+  label: {
+    ...Typography.button,
+    textAlign: 'center',
+  },
+});
+
+const labelStyles = StyleSheet.create({
+  primary: { color: Colors.bg },
+  secondary: { color: Colors.fg },
+  quiet: { ...Typography.small, color: Colors.muted },
+  destructive: { ...Typography.small, color: SemanticColors.danger },
 });

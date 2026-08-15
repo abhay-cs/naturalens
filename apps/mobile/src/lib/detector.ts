@@ -27,6 +27,32 @@ const MODEL = 'gemini-3.1-flash-lite';
 const MAX_WIDTH = 1024;
 
 /**
+ * How loudly a failure should be drawn.
+ *
+ * Separate from the message because they answer different questions. The message is copy
+ * and has to stay exactly as written (see `messageForStatus`); the tone is chrome. Being
+ * offline is a condition of the world and gets a neutral banner; a rate limit is a "wait"
+ * and gets warning; anything we can't recover from gets danger.
+ */
+export type FailureTone = 'neutral' | 'warning' | 'danger';
+
+/** An identification failure carrying both the sentence to show and how to show it. */
+export class DetectorError extends Error {
+  readonly tone: FailureTone;
+
+  constructor(message: string, tone: FailureTone = 'danger') {
+    super(message);
+    this.name = 'DetectorError';
+    this.tone = tone;
+  }
+}
+
+/** Tone for anything thrown out of this module — `danger` for errors from elsewhere. */
+export function toneOf(err: unknown): FailureTone {
+  return err instanceof DetectorError ? err.tone : 'danger';
+}
+
+/**
  * The species half of the answer, shared by both calls below: identifying a photo, and
  * looking a species up by name. Same fields, same wording, one definition.
  *
@@ -123,25 +149,31 @@ function extractText(body: any): string {
  * valid"), but so does a request we've malformed ourselves. Mapping every 400 to "bad key"
  * would blame the user's key for our bug.
  */
-function messageForStatus(status: number, detail: string): string {
+function messageForStatus(status: number, detail: string): DetectorError {
   if (status === 429) {
-    return 'Too many photos too quickly — wait a moment and try again.';
+    // Free-tier limits are tight enough that this is a routine outcome of tapping the
+    // shutter a few times — a "wait", not a fault.
+    return new DetectorError(
+      'Too many photos too quickly — wait a moment and try again.',
+      'warning',
+    );
   }
   if (status === 403 || (status === 400 && /api key/i.test(detail))) {
-    return 'Your Gemini API key was rejected. Check apps/mobile/.env.';
+    return new DetectorError('Your Gemini API key was rejected. Check apps/mobile/.env.', 'danger');
   }
   if (status >= 500) {
-    return 'Gemini is having trouble right now. Try again in a moment.';
+    return new DetectorError('Gemini is having trouble right now. Try again in a moment.', 'danger');
   }
-  return "Couldn't identify that photo. Try again.";
+  return new DetectorError("Couldn't identify that photo. Try again.", 'danger');
 }
 
 /** One structured-JSON round trip. Both callers below differ only in input and schema. */
 async function askGemini<T>(input: unknown[], schema: object): Promise<T> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error(
-      'Missing EXPO_PUBLIC_GEMINI_API_KEY. Add it to apps/mobile/.env and restart the dev server.'
+    throw new DetectorError(
+      'Missing EXPO_PUBLIC_GEMINI_API_KEY. Add it to apps/mobile/.env and restart the dev server.',
+      'danger',
     );
   }
 
@@ -171,20 +203,20 @@ async function askGemini<T>(input: unknown[], schema: object): Promise<T> {
   } catch {
     // fetch only rejects on a network-level failure — a 4xx or 5xx still resolves. So
     // anything landing here means the request never made it off the phone.
-    throw new Error("You're offline. Connect and try again.");
+    throw new DetectorError("You're offline. Connect and try again.", 'neutral');
   }
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
     // The user gets a sentence; the developer gets what actually happened.
     console.warn(`[detector] Gemini ${response.status}: ${detail.slice(0, 300)}`);
-    throw new Error(messageForStatus(response.status, detail));
+    throw messageForStatus(response.status, detail);
   }
 
   try {
     return JSON.parse(extractText(await response.json()));
   } catch {
-    throw new Error('Could not read the response. Try again.');
+    throw new DetectorError('Could not read the response. Try again.', 'danger');
   }
 }
 

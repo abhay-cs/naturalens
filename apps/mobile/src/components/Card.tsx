@@ -1,50 +1,40 @@
 import { View, StyleSheet, ViewProps } from 'react-native';
-import { Colors } from '../theme/colors';
-import { Spacing, BorderRadii } from '../theme/spacing';
+import { Colors, Spacing, BorderRadii } from '../theme/tokens';
 
 interface CardProps extends ViewProps {
   children: React.ReactNode;
-  variant?: 'elevated' | 'flat' | 'outline';
+  variant?: 'panel' | 'outline';
 }
 
-export function Card({
-  children,
-  style,
-  variant = 'flat',
-  ...props
-}: CardProps) {
+/**
+ * A panel — `BorderRadii.panel` (8px), the only rounded rectangle in the system.
+ *
+ * `panel` is the grey inset used to hold species detail on a white page. `outline` is
+ * white with a hairline rule, for cards that float over something (the map header, the
+ * pin preview) where a grey fill would disappear into the terrain.
+ *
+ * Neither casts a shadow by default. Depth in Volume One comes from contrast and space;
+ * the two places that do lift — the tab pill and the pin preview — add it themselves.
+ */
+export function Card({ children, variant = 'panel', style, ...rest }: CardProps) {
   return (
-    <View
-      style={[
-        styles.card,
-        variant === 'elevated' && styles.elevated,
-        variant === 'outline' && styles.outline,
-        style,
-      ]}
-      {...props}
-    >
+    <View style={[styles.base, styles[variant], style]} {...rest}>
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: BorderRadii.large,
+  base: {
+    borderRadius: BorderRadii.panel,
     padding: Spacing.l,
   },
-  elevated: {
-    backgroundColor: Colors.white,
-    shadowColor: Colors.textPrimary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+  panel: {
+    backgroundColor: Colors.surface,
   },
   outline: {
-    backgroundColor: Colors.white,
-    borderWidth: 2,
+    backgroundColor: Colors.bg,
+    borderWidth: 1,
     borderColor: Colors.border,
   },
 });

@@ -44,7 +44,7 @@ The app won't identify anything without that key. See [apps/mobile/README.md](ap
 
 | Component | Status |
 |-----------|--------|
-| Mobile app (Expo) | MVP — capture a photo, identify the species, save it to a list |
+| Mobile app (Expo) | MVP — capture a photo, identify the species, save it to a list, see it on a map |
 | Landing page | Built — see `apps/web` |
 | Backend API | Not started |
 | Inference service | Not started — identification calls the Gemini API directly from the app |

@@ -27,6 +27,19 @@ export interface Detection {
   info: SpeciesInfo;
 }
 
+/**
+ * Where a find was made.
+ *
+ * Resolved once, at capture. `place` is reverse-geocoded there and then rather than on
+ * open, so the detail screen can name the spot without a network call.
+ */
+export interface FindLocation {
+  lat: number;
+  lon: number;
+  /** Nearest street or locality, e.g. "Beechwood Lane". Absent if the lookup failed. */
+  place?: string;
+}
+
 /** A saved detection, persisted across app restarts. */
 export interface HistoryEntry {
   id: string;
@@ -43,4 +56,12 @@ export interface HistoryEntry {
    * backfilled on load — until then the row falls back to the full photo.
    */
   thumbUri?: string;
+  /**
+   * Where the capture happened. Absent on every find saved before location existed, and
+   * on any find where permission was denied or the fix timed out.
+   *
+   * Unlike `info`, this can never be backfilled — the moment is gone. Finds without it
+   * read "not geotagged" and simply don't appear on the map.
+   */
+  location?: FindLocation;
 }

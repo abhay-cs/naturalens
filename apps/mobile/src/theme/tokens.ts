@@ -33,10 +33,13 @@ export const InvertedColors = {
 export const SemanticColors = {
   success: "#2F6B4F",
   successSoft: "#E8F2EC",
+  successBorder: "#B9D2C4",
   warning: "#8A6A1F",
   warningSoft: "#F5F0E0",
+  warningBorder: "#D6C48F",
   danger: "#8B3A3A",
   dangerSoft: "#F5E8E8",
+  dangerBorder: "#D4A9A9",
 } as const;
 
 export const Spacing = {

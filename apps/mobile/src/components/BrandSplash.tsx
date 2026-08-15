@@ -1,87 +1,92 @@
 import { useEffect, useRef } from 'react';
-import {
-  Image,
-  StyleSheet,
-  Animated,
-  Easing,
-  useWindowDimensions,
-} from 'react-native';
-import { Colors } from '../theme/colors';
-
-/** How much of the screen's height the owl fills. */
-const MARK_HEIGHT = 0.42;
-
-/** The mark is cropped tight to the ink (672×896). */
-const MARK_ASPECT = 672 / 896;
-
-/** Time the mark holds at full size before handing off to the app. */
-const HOLD_MS = 600;
+import { Animated, Easing, View, Text, StyleSheet } from 'react-native';
+import { Colors, Spacing, Motion, Typography } from '../theme/tokens';
+import { Display } from '../theme/type';
+import { OwlMark } from './OwlMark';
 
 interface BrandSplashProps {
-  /** Fired once the splash has fully faded out, so it can be unmounted. */
   onDone: () => void;
 }
 
 /**
- * Shown between the native splash and the camera. Same owl, same frosted ground as the
- * native splash, so the two read as one moment rather than two screens.
+ * Screen 01 — the mark, the wordmark, and the volume.
+ *
+ * Shares its white ground and its mark with the native splash, so the handoff reads as one
+ * moment rather than two screens (`docs/DESIGN.md` §6). The native splash shows a static
+ * owl on white; this fades the same owl in over it, holds, and lifts.
+ *
+ * Timings come from `Motion`: `enter` to arrive, `enter + stagger` to hold, `state` to
+ * leave. Scale overshoots slightly on the way in — `Easing.back` — which is the one place
+ * the system permits a flourish.
  */
 export function BrandSplash({ onDone }: BrandSplashProps) {
-  const { height } = useWindowDimensions();
-
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.9)).current;
-  const fade = useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(0.92)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 460,
+          duration: Motion.enter,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.timing(scale, {
           toValue: 1,
-          duration: 620,
+          duration: Motion.enter + Motion.stagger * 2,
           easing: Easing.out(Easing.back(1.3)),
           useNativeDriver: true,
         }),
       ]),
-      Animated.delay(HOLD_MS),
-      Animated.timing(fade, {
+      Animated.delay(Motion.enter + Motion.stagger * 2),
+      Animated.timing(opacity, {
         toValue: 0,
-        duration: 420,
+        duration: Motion.state,
         easing: Easing.in(Easing.quad),
         useNativeDriver: true,
       }),
     ]).start(({ finished }) => {
       if (finished) onDone();
     });
-  }, [opacity, scale, fade, onDone]);
-
-  const markHeight = height * MARK_HEIGHT;
+  }, [opacity, scale, onDone]);
 
   return (
-    <Animated.View style={[styles.container, { opacity: fade }]} pointerEvents="none">
-      <Animated.View style={{ opacity, transform: [{ scale }] }}>
-        <Image
-          source={require('../../assets/mark.png')}
-          style={{ height: markHeight, width: markHeight * MARK_ASPECT }}
-          resizeMode="contain"
-        />
-      </Animated.View>
+    <Animated.View style={[styles.fill, { opacity }]} pointerEvents="none">
+      <View style={styles.center}>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <OwlMark size={88} color={Colors.fg} />
+        </Animated.View>
+        <Text style={styles.wordmark}>Naturalens</Text>
+      </View>
+      <Text style={styles.volume}>Volume One</Text>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fill: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.splashBackground,
+    backgroundColor: Colors.bg,
+    zIndex: 10,
+  },
+  center: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    gap: Spacing.l,
+  },
+  wordmark: {
+    ...Display.splash,
+    color: Colors.fg,
+  },
+  volume: {
+    ...Typography.label,
+    position: 'absolute',
+    bottom: Spacing.xl + Spacing.m,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: Colors.caption,
   },
 });
