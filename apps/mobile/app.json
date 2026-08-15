@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "NaturaLens",
-    "slug": "naturalens",
+    "slug": "naturalens-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.abhaycs.naturalens"
+      "bundleIdentifier": "com.abhaycs.naturalens",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -51,6 +54,18 @@
           "isIosBackgroundLocationEnabled": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f65257ef-23ba-4139-b016-9e141dbd4d6e"
+      }
+    },
+    "owner": "naturalens",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f65257ef-23ba-4139-b016-9e141dbd4d6e"
+    }
   }
 }
