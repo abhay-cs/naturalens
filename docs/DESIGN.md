@@ -21,15 +21,24 @@ how confident it is, and keeps a log of what you've found.
 
 The MVP is one loop:
 
-1. **Capture** — open the camera, take a photo.
-2. **Identify** — the frame freezes on the still we actually analysed, and we name the
-   species, score our confidence, and say something about it.
+1. **Capture** — open the camera, take a photo, or choose one from the library.
+2. **Identify** — the still we will analyse is frozen immediately (at capture or pick,
+   before Gemini returns), and we name the species, score our confidence, and say
+   something about it.
 3. **Keep** — save the find; it persists across restarts, appears in a list, and — if we
    got a fix in time — drops a pin on the map.
 4. **Revisit** — tap a find to see it full-size with its species details, or delete it.
 
 Step 2 freezing is the point: an identification shown over a live camera feed is an
-identification of a frame the user can no longer see.
+identification of a frame the user can no longer see. The freeze is the captured or
+picked JPEG, drawn `resizeMode="cover"` on the viewfinder ground (`#111`), not the last
+paused camera frame — pause-preview can differ from the file we send. `takePictureAsync`
+runs with `skipProcessing: false` so EXIF orientation is applied (Android is the usual
+failure). After a successful capture, and when a library still is overlaid on a live
+session, the native preview is `pausePreview()`'d so the sensor stops; `resumePreview()`
+on Try another, save, or identify-fail. Gallery identify with the camera denied skips
+pause/resume — there is no session. The result sheet waits until identify finishes
+(`hasResult = photoUri && !capturing`) so it never opens empty.
 
 Step 4 is what stops the list being a dead end. A find that can only ever be a 64px
 thumbnail isn't a discovery, it's a receipt.
@@ -44,7 +53,7 @@ Everything else is roadmap.
 - No offline identification. Naming a species is a network call and fails without one;
   what *is* offline is everything already saved, and the app says which is which
   (§5b).
-- No video or image-file upload.
+- No video.
 
 ### 1.4 Location and the map
 
@@ -59,9 +68,14 @@ waited added more of them.
 So `HistoryEntry.location` is optional and additive, like `info` and `thumbUri` before it —
 no key bump, no migration. It is resolved at capture, never at open, and it is allowed to
 fail: permission denied, no fix indoors, a 4s timeout. A find without a pin is a normal
-find, and nothing about the location path is permitted to fail a capture. `place` — the
-street or locality — is reverse-geocoded at capture too, so opening an old find offline in
-another country still names where it happened.
+find, and nothing about the location path is permitted to fail a capture. Camera GPS runs
+**after** identify has returned and `capturing` has cleared, so the result sheet does not
+wait on the 4s location timeout. `place` — the street or locality — is reverse-geocoded at
+capture too, so opening an old find offline in another country still names where it happened.
+
+Library picks never geotag. Identify from the gallery calls `setLocation(undefined)` at the
+start so a pin from a previous camera shot in the same session cannot attach. Those finds
+show “On phone” / “not geotagged”, same as a camera shot that never got a fix.
 
 The map draws terrain and pins, nothing else: no business listings, no transit, no
 shields. On Android that's a `customMapStyle` (`src/theme/mapStyle.ts`); iOS gets Apple
@@ -73,10 +87,16 @@ Note `customMapStyle` is passed **only** on Android. Handing it to Apple Maps do
 get ignored, it suppresses `mapType`, which is the one lever iOS gives us — so passing it
 on both platforms silently costs you the muted style and leaves a full-colour map.
 
-**The map is the one screen that needs a development build.** `react-native-maps` is not
-among the native modules Expo Go ships, so in Expo Go the tab draws its ground and says so
-while the other two carry on working (§2.1). Location is still recorded there — the pins
-are waiting for a build that can draw them.
+**The map and the library picker need a native build.** `react-native-maps` is not among
+the native modules Expo Go ships, so in Expo Go the tab draws its ground and says so
+while camera and finds carry on working (§2.1). Location is still recorded there — the
+pins are waiting for a build that can draw them. `expo-image-picker`'s config plugin
+ships `NSPhotoLibraryUsageDescription` and sets `microphonePermission: false` so Android
+does not gain `RECORD_AUDIO`; it must not set `cameraPermission: false`, which would
+fight `expo-camera`. That plugin cannot land over `expo-updates` OTA — ship a new EAS
+`development` / `preview` / `production` binary after adding it. The picker itself is the
+system one (iOS `PHPickerViewController` when `allowsEditing` is false; Android Photo
+Picker on 13/14, no `READ_MEDIA_*`), not a JS album UI.
 
 ---
 
@@ -85,7 +105,7 @@ are waiting for a build that can draw them.
 ```
 ┌──────────────── Expo app (Expo Go) ────────────────┐
 │                                                    │
-│  CameraDetectionScreen ──capture──> detector.ts ───┼──> Gemini API
+│  CameraDetectionScreen ──capture/pick──> detector.ts ─┼──> Gemini API
 │         │                                          │    (flash-lite)
 │         │ save                                     │
 │         v                                          │
@@ -104,6 +124,7 @@ There is no server of ours. The app calls Gemini directly.
 | Framework | React Native via Expo (SDK 54), runs in Expo Go |
 | Language | TypeScript |
 | Camera | `expo-camera` |
+| Image library | `expo-image-picker` (PHPicker / Android Photo Picker) |
 | Identification | Gemini API (`gemini-3.1-flash-lite`) |
 | Persistence | `@react-native-async-storage/async-storage` + `expo-file-system` |
 | State | React context — no external state library |
@@ -242,12 +263,16 @@ from `history`. That's what makes delete work without a special case: remove the
 itself and the pin preview drops.
 
 Navigation is hand-rolled — there is no navigation library, and three tabs did not change
-that. `MainLayout` is a lookup from `activeTab` to a screen. The detail view is a React
-Native `<Modal>` rather than an absolute-fill `View`, because `onRequestClose` is what
-makes Android's hardware back button close the detail instead of backgrounding the app;
-the settings sheet is a `<Modal>` for the same reason, and lives inside `FindsScreen`
-beside the button that opens it. The map's pin preview is **not** a modal — the map has to
-stay visible behind it, since the card's whole job is telling you which pin you tapped.
+that. `MainLayout` is a lookup from `activeTab` to a screen, and it **unmounts** the camera
+when the user leaves the tab, so an in-flight identify ignores its result rather than
+calling `setState` after unmount. The detail view is a React Native `<Modal>` rather than
+an absolute-fill `View`, because `onRequestClose` is what makes Android's hardware back
+button close the detail instead of backgrounding the app; the settings sheet is a
+`<Modal>` for the same reason, and lives inside `FindsScreen` beside the button that
+opens it. The camera result sheet is not a modal — the freeze has to stay visible behind
+it — so it registers `BackHandler` and maps hardware back to Try another. The map's pin
+preview is **not** a modal either — the map has to stay visible behind it, since the
+card's whole job is telling you which pin you tapped.
 
 ---
 
@@ -357,7 +382,8 @@ the change. The browsable Volume One spec lives in
 - **The map looks slightly different on the two platforms.** Apple Maps ignores
   `customMapStyle`, so iOS gets `mutedStandard` and Android gets the real style. Both read
   as pale line work; Android is the closer match.
-- **The map needs a development build** (§1.4). Expo Go gets an explanation instead.
+- **The map and the library picker need a native build** (§1.4). Expo Go gets a map
+  explanation instead; OTA cannot add the picker plugin.
 - The offline result state is drawn but unreachable (§5b).
 
 ---

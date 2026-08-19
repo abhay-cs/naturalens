@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.fg,
   },
-  // No chrome at all — "Retake" under the primary pill, "Delete find" under a panel.
+  // No chrome at all — "Try another" under the primary pill, "Delete find" under a panel.
   quiet: {
     paddingVertical: Spacing.m,
   },

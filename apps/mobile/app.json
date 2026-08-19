@@ -44,6 +44,13 @@
           "recordAudioAndroid": false
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow NaturaLens to identify animals in photos you choose from your library.",
+          "microphonePermission": false
+        }
+      ],
       "expo-font",
       [
         "expo-location",

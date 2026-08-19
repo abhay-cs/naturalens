@@ -89,3 +89,13 @@ export function CloseIcon({ size = 15, color = Colors.bg }: IconProps) {
     </Svg>
   );
 }
+
+/** Two stacked frames — choose a still from the library rather than the shutter. */
+export function LibraryIcon({ size = DEFAULTS.size, color = Colors.fg }: IconProps) {
+  return (
+    <Svg {...base(size, color)} strokeLinecap="square">
+      <Rect x={6.5} y={3} width={14} height={14} />
+      <Rect x={3.5} y={7} width={14} height={14} />
+    </Svg>
+  );
+}
