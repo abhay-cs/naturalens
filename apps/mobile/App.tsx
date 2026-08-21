@@ -12,6 +12,7 @@ import { Archivo_400Regular } from '@expo-google-fonts/archivo/400Regular';
 import { Archivo_500Medium } from '@expo-google-fonts/archivo/500Medium';
 import { Archivo_600SemiBold } from '@expo-google-fonts/archivo/600SemiBold';
 import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppStateProvider, useAppState } from './src/contexts/AppStateContext';
 import { MainLayout } from './src/layouts/MainLayout';
@@ -76,10 +77,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AppStateProvider>
-        <AppContent />
-      </AppStateProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppStateProvider>
+          <AppContent />
+        </AppStateProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -26,6 +26,85 @@ function photoDirectory(): Directory {
 const photoFile = (id: string) => new File(photoDirectory(), `${id}.jpg`);
 const thumbFile = (id: string) => new File(photoDirectory(), `${id}_thumb.jpg`);
 
+function fileExists(file: File): boolean {
+  try {
+    return file.exists;
+  } catch {
+    return false;
+  }
+}
+
+function fileExistsUri(uri: string | undefined): boolean {
+  if (!uri) return false;
+  try {
+    return new File(uri).exists;
+  } catch {
+    return false;
+  }
+}
+
+/** Names stored in AsyncStorage — not absolute file:// URLs, which die when iOS changes container UUID. */
+function storedPhotoName(id: string) {
+  return `${id}.jpg`;
+}
+function storedThumbName(id: string) {
+  return `${id}_thumb.jpg`;
+}
+
+function persistable(entry: HistoryEntry): HistoryEntry {
+  return {
+    ...entry,
+    photoUri: storedPhotoName(entry.id),
+    thumbUri: entry.thumbUri ? storedThumbName(entry.id) : undefined,
+  };
+}
+
+/**
+ * Resolve a stored path to a URI the Image component can load in *this* container.
+ *
+ * After a TestFlight update the Documents files migrate but AsyncStorage still has the
+ * previous UUID. Prefer the canonical file for this id; fall back to the stored URI if
+ * that file still exists; otherwise keep the stored string so the row stays (gray).
+ */
+function hydrate(entry: HistoryEntry): HistoryEntry {
+  const canonicalPhoto = photoFile(entry.id);
+  const canonicalThumb = thumbFile(entry.id);
+
+  let photoUri = entry.photoUri;
+  if (fileExists(canonicalPhoto)) {
+    photoUri = canonicalPhoto.uri;
+  } else if (fileExistsUri(entry.photoUri)) {
+    photoUri = entry.photoUri;
+  } else if (entry.photoUri && !entry.photoUri.includes('://')) {
+    photoUri = canonicalPhoto.uri;
+  }
+
+  let thumbUri = entry.thumbUri;
+  if (fileExists(canonicalThumb)) {
+    thumbUri = canonicalThumb.uri;
+  } else if (fileExistsUri(entry.thumbUri)) {
+    thumbUri = entry.thumbUri;
+  } else if (entry.thumbUri && !entry.thumbUri.includes('://')) {
+    thumbUri = canonicalThumb.uri;
+  }
+
+  return { ...entry, photoUri, thumbUri };
+}
+
+function needsPersistRewrite(raw: HistoryEntry): boolean {
+  return (
+    raw.photoUri !== storedPhotoName(raw.id) ||
+    (raw.thumbUri != null && raw.thumbUri !== storedThumbName(raw.id))
+  );
+}
+
+function livePhotoUri(entry: HistoryEntry): string | undefined {
+  const canonical = photoFile(entry.id);
+  if (fileExists(canonical)) return canonical.uri;
+  if (fileExistsUri(entry.photoUri)) return entry.photoUri;
+  return undefined;
+}
+
 /** Resizes `sourceUri` and writes it to `destination`, which lives in the document dir. */
 async function writeResized(
   sourceUri: string,
@@ -44,6 +123,14 @@ async function writeResized(
   new File(saved.uri).copy(destination);
 }
 
+function tryDelete(file: File) {
+  try {
+    file.delete();
+  } catch {
+    // Already gone, or never written.
+  }
+}
+
 /** Patches one row and writes the list back. Returns null if it's already been deleted. */
 async function patchEntry(
   id: string,
@@ -55,24 +142,31 @@ async function patchEntry(
   const entry = history.find((e) => e.id === id);
   if (!entry) return null;
 
-  const updated = { ...entry, ...patch };
+  const updated = hydrate({ ...entry, ...patch });
 
   await AsyncStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify(history.map((e) => (e.id === id ? updated : e)))
+    JSON.stringify(history.map((e) => persistable(e.id === id ? updated : e)))
   );
 
   return updated;
 }
 
-/** Reads the saved detections, newest first. */
+/** Reads the saved detections, newest first. Image URIs are resolved for this container. */
 export async function loadHistory(): Promise<HistoryEntry[]> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
 
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+
+    const hydrated = parsed.map((row: HistoryEntry) => hydrate(row));
+    if (parsed.some((row: HistoryEntry) => needsPersistRewrite(row))) {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(hydrated.map(persistable)));
+    }
+
+    return hydrated;
   } catch {
     // Corrupt or unreadable — start clean rather than crash on launch.
     return [];
@@ -114,20 +208,23 @@ export async function addHistoryEntry(
   };
 
   const history = [entry, ...(await loadHistory())];
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(history.map(persistable)));
 
   return entry;
 }
 
 /**
- * Gives a find saved before thumbnails existed one, from the full photo it already has.
+ * Gives a find a thumbnail when the thumb file is missing but the full photo is still here.
  * Returns null if there was nothing to do, or the row is gone.
  */
 export async function ensureThumbnail(entry: HistoryEntry): Promise<HistoryEntry | null> {
-  if (entry.thumbUri) return null;
+  if (fileExists(thumbFile(entry.id)) || fileExistsUri(entry.thumbUri)) return null;
+
+  const source = livePhotoUri(entry);
+  if (!source) return null;
 
   const thumb = thumbFile(entry.id);
-  await writeResized(entry.photoUri, thumb, THUMB_WIDTH, 0.7);
+  await writeResized(source, thumb, THUMB_WIDTH, 0.7);
 
   return patchEntry(entry.id, { thumbUri: thumb.uri });
 }
@@ -151,18 +248,26 @@ export async function deleteHistoryEntry(id: string): Promise<void> {
 
   await AsyncStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify(history.filter((e) => e.id !== id))
+    JSON.stringify(history.filter((e) => e.id !== id).map(persistable))
   );
 
-  // We wrote these into the document directory, where nothing else will ever reclaim them.
-  // Dropping the row without dropping the files leaks them for the life of the install —
-  // and there are two of them now, so missing the thumb leaks it just as surely.
-  for (const uri of [entry.photoUri, entry.thumbUri]) {
-    if (!uri) continue;
+  // Canonical files in this container — not the stale UUID paths in storage.
+  const photo = photoFile(id);
+  const thumb = thumbFile(id);
+  tryDelete(photo);
+  tryDelete(thumb);
+  if (entry.photoUri && entry.photoUri !== photo.uri) {
     try {
-      new File(uri).delete();
+      tryDelete(new File(entry.photoUri));
     } catch {
-      // Already gone, or never written. The row is what the user asked us to remove.
+      // Stored URI wasn't a path we can open.
+    }
+  }
+  if (entry.thumbUri && entry.thumbUri !== thumb.uri) {
+    try {
+      tryDelete(new File(entry.thumbUri));
+    } catch {
+      // Stored URI wasn't a path we can open.
     }
   }
 }

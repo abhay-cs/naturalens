@@ -46,7 +46,11 @@ export interface HistoryEntry {
   label: string;
   /** Confidence, 0 to 1. */
   score: number;
-  /** Permanent on-disk copy of the capture — not the camera's cache URI. */
+  /**
+   * Display URI for the capture. On disk we persist `{id}.jpg` under Documents/history
+   * and resolve it against the current container — absolute file:// paths die when iOS
+   * rotates the app UUID on a TestFlight update.
+   */
   photoUri: string;
   timestamp: number;
   /** Absent on finds saved before species info existed — render without it. */

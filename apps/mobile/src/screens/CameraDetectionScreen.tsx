@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Colors, InvertedColors, Spacing, Typography } from '../theme/tokens';
 import { Display } from '../theme/type';
 import { bottomClearance, SHUTTER_SIZE, SHUTTER_CORE } from '../theme/layout';
@@ -34,6 +35,7 @@ const OVER_LENS = InvertedColors;
 /** Chip and sheet grounds. Not tokens: these are scrims over live video, tuned by eye. */
 const CHIP_SCRIM = 'rgba(0,0,0,0.55)';
 const VIEWFINDER = '#111111';
+const ZOOM_CHIP = 0.02;
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ['images'],
@@ -55,6 +57,7 @@ export function CameraDetectionScreen() {
   const [detection, setDetection] = useState<Detection | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [location, setLocation] = useState<FindLocation | undefined>(undefined);
+  const [zoom, setZoom] = useState(0);
 
   // Only ask for location once per session, and only after the user has actually taken a
   // photo — a permission sheet on launch, before there's anything to attach a place to,
@@ -62,8 +65,28 @@ export function CameraDetectionScreen() {
   const askedForLocation = useRef(false);
   const previewPaused = useRef(false);
   const alive = useRef(true);
+  const zoomRef = useRef(0);
+  const pinchStartZoom = useRef(0);
 
   const { pushBanner, addHistoryEntry, setActiveTab } = useAppState();
+
+  const applyZoom = useCallback((next: number) => {
+    const clamped = Math.min(1, Math.max(0, next));
+    zoomRef.current = clamped;
+    setZoom(clamped);
+  }, []);
+
+  const pinch = useMemo(
+    () =>
+      Gesture.Pinch()
+        .onBegin(() => {
+          pinchStartZoom.current = zoomRef.current;
+        })
+        .onUpdate((e) => {
+          applyZoom(pinchStartZoom.current * e.scale);
+        }),
+    [applyZoom],
+  );
 
   const cameraGranted = permission?.granted === true;
   // Freeze is up as soon as we have a URI; the sheet waits until identify finishes so it
@@ -196,7 +219,8 @@ export function CameraDetectionScreen() {
     setDetection(null);
     setPhotoUri(null);
     setLocation(undefined);
-  }, [saving, resumeCameraPreview]);
+    applyZoom(0);
+  }, [saving, resumeCameraPreview, applyZoom]);
 
   const saveDiscovery = useCallback(async () => {
     if (!detection || !photoUri || saving) return;
@@ -286,8 +310,16 @@ export function CameraDetectionScreen() {
           ref={cameraRef}
           style={StyleSheet.absoluteFill}
           facing="back"
+          zoom={zoom}
           onCameraReady={() => setCameraReady(true)}
         />
+      )}
+
+      {/* Live camera only — freeze and chrome sit above this so shutter taps are not stolen. */}
+      {!photoUri && cameraGranted && (
+        <GestureDetector gesture={pinch}>
+          <View style={StyleSheet.absoluteFill} collapsable={false} />
+        </GestureDetector>
       )}
 
       {/* The still we actually analysed, frozen before identify returns. Cover + the
@@ -302,7 +334,19 @@ export function CameraDetectionScreen() {
 
       <View style={[styles.topBar, { top: insets.top + Spacing.m }]} pointerEvents="box-none">
         <OwlMark size={26} color={OVER_LENS.fg} />
-        <Text style={styles.statusChip}>{status}</Text>
+        <View style={styles.chipRow}>
+          {zoom > ZOOM_CHIP && !photoUri && (
+            <TouchableOpacity
+              onPress={() => applyZoom(0)}
+              accessibilityRole="button"
+              accessibilityLabel="Reset zoom to 1x"
+              activeOpacity={0.8}
+            >
+              <Text style={styles.statusChip}>1×</Text>
+            </TouchableOpacity>
+          )}
+          <Text style={styles.statusChip}>{status}</Text>
+        </View>
       </View>
 
       <View
@@ -428,6 +472,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  chipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.s,
   },
   statusChip: {
     ...Typography.label,
