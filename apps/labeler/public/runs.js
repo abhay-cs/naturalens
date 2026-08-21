@@ -23,6 +23,15 @@ let runs = [];
 let selected = null;
 let toastTimer = null;
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const STATUS_LABEL = {
   queued: "Waiting",
   running: "Training",
@@ -103,9 +112,9 @@ function renderRuns() {
     li.innerHTML = `
       <div class="run-row">
         <button type="button" class="run-open">
-          <span class="run-title">${runTitle(run)}</span>
+          <span class="run-title">${escapeHtml(runTitle(run))}</span>
           <span class="run-meta">
-            <span class="pill ${run.status}">${statusLabel(run.status)}</span>
+            <span class="pill ${escapeHtml(run.status)}">${escapeHtml(statusLabel(run.status))}</span>
             ${
               hasScores
                 ? `<span>Overall ${pct(run.map50)}</span>
@@ -374,7 +383,7 @@ async function openRun(id) {
         btn.className = "pred-shot";
         btn.innerHTML = `
           <img src="/thumb/${encodeURIComponent(im.id)}" alt="" loading="lazy" />
-          <span>${im.file || im.id}</span>`;
+          <span>${escapeHtml(im.file || im.id)}</span>`;
         btn.addEventListener("click", () => showPrediction(entry, manifestById));
         btn.addEventListener("dblclick", () => {
           location.href = `/?id=${encodeURIComponent(im.id)}`;
@@ -404,7 +413,7 @@ async function openRun(id) {
     const name = entry.file || entry.id || "image";
     btn.innerHTML = `
       <img src="/thumb/${encodeURIComponent(entry.id)}" alt="" loading="lazy" />
-      <span>${name}</span>`;
+      <span>${escapeHtml(name)}</span>`;
     btn.addEventListener("click", () => {
       showPrediction(entry, manifestById);
     });

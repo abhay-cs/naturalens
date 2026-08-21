@@ -5,7 +5,7 @@
   "compatibility_date": "2026-08-09",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
-  "preview_urls": true,
+  "preview_urls": false,
   "observability": {
     "enabled": true
   },
@@ -38,6 +38,11 @@
       "database_name": "naturalens-labels",
       "database_id": "2fe255ec-de36-4899-9443-9b651612773d",
       "migrations_dir": "migrations"
+    },
+    {
+      "binding": "WAITLIST_DB",
+      "database_name": "naturalens-waitlist",
+      "database_id": "5d04113a-851b-485c-a0e9-0d4ccb02cd07"
     }
   ],
   "r2_buckets": [

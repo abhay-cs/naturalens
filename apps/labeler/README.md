@@ -107,6 +107,7 @@ Pages:
 - `/` — Skim label editor
 - `/upload.html` — upload + EXIF normalize
 - `/runs.html` — create runs, review metrics / preds
+- `/join-list` — waitlist emails from the landing page (same D1 as `naturalens-web`)
 
 ## Seed existing photos
 

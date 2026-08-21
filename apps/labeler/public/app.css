@@ -988,3 +988,40 @@ body.login-page {
   opacity: 0.55;
   cursor: wait;
 }
+
+.waitlist-table-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.waitlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.waitlist-table th,
+.waitlist-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.waitlist-table th {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  font-weight: 600;
+}
+
+.waitlist-email {
+  font-family: Archivo, ui-sans-serif, sans-serif;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.waitlist-joined {
+  color: var(--mist);
+  white-space: nowrap;
+}

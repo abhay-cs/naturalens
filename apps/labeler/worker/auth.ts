@@ -3,6 +3,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 export interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
+  WAITLIST_DB: D1Database;
   DATA: R2Bucket;
   TRAIN_TOKEN?: string;
   TEAM_DOMAIN?: string;
@@ -53,7 +54,19 @@ export function bearerToken(request: Request): string | null {
 
 export function isTrainAuth(request: Request, env: Env): boolean {
   const token = bearerToken(request);
-  return Boolean(env.TRAIN_TOKEN && token && token === env.TRAIN_TOKEN);
+  return Boolean(env.TRAIN_TOKEN && token && timingSafeEqual(token, env.TRAIN_TOKEN));
+}
+
+/** Constant-time string compare (length still leaks; PIN/HMAC values are fixed-size). */
+export function timingSafeEqual(a: string, b: string): boolean {
+  const left = new TextEncoder().encode(a);
+  const right = new TextEncoder().encode(b);
+  const n = Math.max(left.length, right.length, 1);
+  let diff = left.length ^ right.length;
+  for (let i = 0; i < n; i++) {
+    diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
+  }
+  return diff === 0;
 }
 
 let cachedJwks: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -152,13 +165,13 @@ export async function mintSessionCookie(
   const value = `${payload}.${sig}`;
   const secure = opts.secure !== false;
   const securePart = secure ? "; Secure" : "";
-  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly${securePart}; SameSite=Lax; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly${securePart}; SameSite=Strict; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`;
 }
 
 export function clearSessionCookie(opts: { secure?: boolean } = {}): string {
   const secure = opts.secure !== false;
   const securePart = secure ? "; Secure" : "";
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly${securePart}; SameSite=Lax; Max-Age=0`;
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly${securePart}; SameSite=Strict; Max-Age=0`;
 }
 
 export async function readPinSession(
@@ -171,11 +184,11 @@ export async function readPinSession(
   const [payload, sig] = raw.split(".");
   if (!payload || !sig) return null;
   const expected = await hmacSign(env.PIN_AUTH_SECRET, payload);
-  if (expected !== sig) return null;
+  if (!timingSafeEqual(expected, sig)) return null;
   const data = fromB64urlJson<{ email?: string; exp?: number }>(payload);
   if (!data?.email || typeof data.exp !== "number" || data.exp < Date.now()) return null;
   const allow = allowedEmails(env);
-  if (allow.size && !allow.has(data.email.toLowerCase())) return null;
+  if (!allow.size || !allow.has(data.email.toLowerCase())) return null;
   return { email: data.email.toLowerCase() };
 }
 
@@ -215,7 +228,8 @@ export type LoginResult =
   | { ok: false; status: number; error: string; remaining?: number };
 
 export async function handlePinLogin(request: Request, env: Env): Promise<LoginResult> {
-  if (!env.PIN_AUTH_PIN || !env.PIN_AUTH_SECRET) {
+  const allow = allowedEmails(env);
+  if (!env.PIN_AUTH_PIN || !env.PIN_AUTH_SECRET || !allow.size) {
     return { ok: false, status: 503, error: "Pin auth is not configured." };
   }
   let body: { email?: string; pin?: string };
@@ -241,9 +255,8 @@ export async function handlePinLogin(request: Request, env: Env): Promise<LoginR
     };
   }
 
-  const allow = allowedEmails(env);
-  const emailOk = allow.size === 0 || allow.has(email);
-  const pinOk = pin === String(env.PIN_AUTH_PIN);
+  const emailOk = allow.has(email);
+  const pinOk = timingSafeEqual(pin, String(env.PIN_AUTH_PIN));
 
   if (!emailOk || !pinOk) {
     const result = await bumpFailure(env, key);
@@ -277,7 +290,8 @@ export async function handlePinLogin(request: Request, env: Env): Promise<LoginR
  * - /api/runs/:id/status with TRAIN_TOKEN → allowed (Colab)
  * - AUTH_MODE=pin → signed session cookie from email+PIN login
  * - AUTH_MODE=required + TEAM_DOMAIN + POLICY_AUD → Access JWT required
- * - AUTH_MODE=optional (default) → Access JWT verified when present; otherwise allow as "dev"
+ * - AUTH_MODE=optional → Access JWT verified when present; otherwise allow as "dev"
+ * - AUTH_MODE unset → pin (fail closed)
  */
 export async function authenticate(
   request: Request,
@@ -288,7 +302,7 @@ export async function authenticate(
     return { ok: true, auth: { email: "colab@train", via: "train" } };
   }
 
-  const mode = (env.AUTH_MODE || "optional").toLowerCase();
+  const mode = (env.AUTH_MODE || "pin").toLowerCase();
 
   if (mode === "pin") {
     const session = await readPinSession(request, env);
@@ -299,14 +313,13 @@ export async function authenticate(
   }
 
   const token = request.headers.get("cf-access-jwt-assertion");
-  const emailHeader = request.headers.get("cf-access-authenticated-user-email");
 
   if (env.TEAM_DOMAIN && env.POLICY_AUD) {
     if (!token) {
       if (mode === "required") {
         return { ok: false, response: unauthorized("Missing Cloudflare Access JWT.") };
       }
-      return { ok: true, auth: { email: emailHeader || "dev@local", via: "dev" } };
+      return { ok: true, auth: { email: "dev@local", via: "dev" } };
     }
     try {
       const { payload } = await jwtVerify(token, jwksFor(env.TEAM_DOMAIN), {
@@ -315,12 +328,10 @@ export async function authenticate(
       });
       const email =
         (typeof payload.email === "string" && payload.email) ||
-        emailHeader ||
-        (typeof payload.sub === "string" ? payload.sub : null);
+        (typeof payload.sub === "string" ? payload.sub : "access-user");
       return { ok: true, auth: { email, via: "access" } };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Invalid Access token";
-      return { ok: false, response: forbidden(`Invalid Access token: ${message}`) };
+      return { ok: false, response: forbidden("Invalid Access token.") };
     }
   }
 
@@ -331,14 +342,14 @@ export async function authenticate(
     };
   }
 
-  return { ok: true, auth: { email: emailHeader || "dev@local", via: "dev" } };
+  return { ok: true, auth: { email: "dev@local", via: "dev" } };
 }
 
 /** Paths that stay public when AUTH_MODE=pin. */
 export function isPublicPinPath(path: string): boolean {
   if (path === "/api/health") return true;
   if (path === "/api/auth/login" || path === "/api/auth/logout" || path === "/api/auth/me") return true;
-  if (path === "/login" || path === "/login.html") return true;
+  if (path === "/login" || path === "/login.html" || path === "/login.js") return true;
   if (
     path === "/app.css" ||
     path === "/tokens.css" ||

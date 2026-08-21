@@ -20,7 +20,19 @@ import {
   reserveStorage,
   snapshot,
 } from "./quota";
-import { flagsFor, json, nowIso, runId, sanitizeBoxes, type Box } from "./util";
+import {
+  applySecurityHeaders,
+  flagsFor,
+  isHexId,
+  isJpeg,
+  isTrustedMutation,
+  json,
+  nowIso,
+  runId,
+  sanitizeBoxes,
+  sanitizeFileName,
+  type Box,
+} from "./util";
 
 type ImageRow = {
   id: string;
@@ -59,6 +71,32 @@ function parseBoxes(raw: string): Box[] {
   }
 }
 
+function loginRedirect(requestUrl: URL, path: string): Response {
+  const login = new URL("/login.html", requestUrl);
+  const isDocument =
+    path === "/" ||
+    path.endsWith(".html") ||
+    (!path.startsWith("/api/") && !path.includes("."));
+  if (isDocument && path !== "/login.html" && path !== "/login") {
+    login.searchParams.set("next", path);
+  }
+  return Response.redirect(login.toString(), 302);
+}
+
+async function handleWaitlistList(env: Env): Promise<Response> {
+  if (!env.WAITLIST_DB) {
+    return json({ error: "Waitlist database is not bound." }, 500);
+  }
+  const rows = await env.WAITLIST_DB.prepare(
+    `SELECT email, created_at FROM waitlist ORDER BY datetime(created_at) DESC, id DESC`,
+  ).all<{ email: string; created_at: string }>();
+  const signups = rows.results || [];
+  return json({
+    count: signups.length,
+    signups,
+  });
+}
+
 async function handleDataset(env: Env): Promise<Response> {
   const rows = await env.DB.prepare(
     `SELECT id, file, width, height, split, boxes, reviewed, version, updated_at, updated_by
@@ -91,23 +129,28 @@ async function handleUpload(request: Request, env: Env, auth: AuthContext): Prom
   const thumb = form.get("thumb");
   const display = form.get("display");
   const original = form.get("original");
-  const fileName = String(form.get("file") || "").trim();
+  const fileName = sanitizeFileName(String(form.get("file") || ""));
   const id = String(form.get("id") || "").trim().toLowerCase();
   const width = Number(form.get("width"));
   const height = Number(form.get("height"));
-  const split = String(form.get("split") || "train").trim() || "train";
+  const splitRaw = String(form.get("split") || "train").trim();
+  const split = splitRaw === "val" ? "val" : "train";
   const boxesRaw = form.get("boxes");
   let boxes: Box[] = [];
   if (typeof boxesRaw === "string" && boxesRaw.trim()) {
-    const sanitized = sanitizeBoxes(JSON.parse(boxesRaw));
-    if (!sanitized) return json({ error: "Invalid boxes JSON." }, 400);
-    boxes = sanitized;
+    try {
+      const sanitized = sanitizeBoxes(JSON.parse(boxesRaw));
+      if (!sanitized) return json({ error: "Invalid boxes JSON." }, 400);
+      boxes = sanitized;
+    } catch {
+      return json({ error: "Invalid boxes JSON." }, 400);
+    }
   }
 
   if (!(image instanceof File) || !(thumb instanceof File) || !(display instanceof File)) {
     return json({ error: "image, thumb, and display files are required." }, 400);
   }
-  if (!id || !/^[a-f0-9]{64}$/.test(id)) {
+  if (!id || !isHexId(id)) {
     return json({ error: "id must be the sha256 hex of the normalized jpeg." }, 400);
   }
   if (!fileName || !Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) {
@@ -119,6 +162,10 @@ async function handleUpload(request: Request, env: Env, auth: AuthContext): Prom
   const thumbBuf = await thumb.arrayBuffer();
   const displayBuf = await display.arrayBuffer();
   const originalBuf = original instanceof File ? await original.arrayBuffer() : null;
+
+  if (!isJpeg(imageBuf) || !isJpeg(thumbBuf) || !isJpeg(displayBuf)) {
+    return json({ error: "image, thumb, and display must be JPEG." }, 400);
+  }
 
   for (const [label, buf] of [
     ["image", imageBuf],
@@ -172,7 +219,7 @@ async function handleUpload(request: Request, env: Env, auth: AuthContext): Prom
     if (originalBuf && original instanceof File) {
       const ext = (fileName.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
       await env.DATA.put(`originals/${id}.${ext}`, originalBuf, {
-        httpMetadata: { contentType: original.type || "application/octet-stream" },
+        httpMetadata: { contentType: "application/octet-stream" },
       });
     }
   } catch (error) {
@@ -240,16 +287,15 @@ async function handleLabelPut(
   const reviewed =
     typeof rec.reviewed === "boolean" ? (rec.reviewed ? 1 : 0) : null;
 
-  let image =
+  const stem = idOrStem.replace(/[%_]/g, "");
+  const image =
     (await env.DB.prepare(`SELECT * FROM images WHERE id = ?`).bind(idOrStem).first<ImageRow>()) ||
-    (await env.DB.prepare(`SELECT * FROM images WHERE file = ?`).bind(idOrStem).first<ImageRow>());
-  if (!image) {
-    const all = await env.DB.prepare(`SELECT * FROM images`).all<ImageRow>();
-    image =
-      (all.results || []).find(
-        (r) => r.id === idOrStem || r.file === idOrStem || r.file.replace(/\.[^.]+$/, "") === idOrStem,
-      ) || null;
-  }
+    (await env.DB.prepare(`SELECT * FROM images WHERE file = ?`).bind(idOrStem).first<ImageRow>()) ||
+    (stem
+      ? await env.DB.prepare(`SELECT * FROM images WHERE file LIKE ? ESCAPE '\\' LIMIT 1`)
+          .bind(`${stem}.%`)
+          .first<ImageRow>()
+      : null);
   if (!image) return json({ error: "Image not found." }, 404);
   if (image.version !== version) {
     return json(
@@ -303,7 +349,8 @@ async function serveObject(env: Env, key: string, cache: string): Promise<Respon
   if (obj instanceof Response) return obj;
   if (!obj) return json({ error: "Not found." }, 404);
   const headers = new Headers();
-  headers.set("content-type", obj.httpMetadata?.contentType || "image/jpeg");
+  headers.set("content-type", "image/jpeg");
+  headers.set("x-content-type-options", "nosniff");
   headers.set("cache-control", cache);
   headers.set("etag", obj.httpEtag);
   return new Response(obj.body, { headers });
@@ -602,15 +649,23 @@ async function handleRunStatus(request: Request, env: Env, id: string): Promise<
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    return applySecurityHeaders(request, await handleRequest(request, env));
+  },
+} satisfies ExportedHandler<Env>;
+
+async function handleRequest(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, "") || "/";
-    const mode = (env.AUTH_MODE || "optional").toLowerCase();
+    const mode = (env.AUTH_MODE || "pin").toLowerCase();
 
     if (path === "/api/health" && request.method === "GET") {
       return json({ ok: true, service: "naturalens-labeler" });
     }
 
     if (path === "/api/auth/login" && request.method === "POST") {
+      if (!isTrustedMutation(request, false)) {
+        return json({ error: "Invalid origin." }, 403);
+      }
       const result = await handlePinLogin(request, env);
       if (!result.ok) {
         return json(
@@ -629,6 +684,9 @@ export default {
     }
 
     if (path === "/api/auth/logout" && request.method === "POST") {
+      if (!isTrustedMutation(request, false)) {
+        return json({ error: "Invalid origin." }, 403);
+      }
       const secure = url.protocol === "https:";
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,
@@ -659,7 +717,7 @@ export default {
         const session = await readPinSession(request, env);
         if (!session) {
           if (wantsHtml(request) || !path.startsWith("/api/")) {
-            return Response.redirect(new URL("/login.html", url).toString(), 302);
+            return loginRedirect(url, path);
           }
           return json({ error: "Sign in required." }, 401);
         }
@@ -669,11 +727,16 @@ export default {
     const authResult = await authenticate(request, env, { allowTrain });
     if (!authResult.ok) {
       if (mode === "pin" && (wantsHtml(request) || !path.startsWith("/api/"))) {
-        return Response.redirect(new URL("/login.html", url).toString(), 302);
+        return loginRedirect(url, path);
       }
       return authResult.response;
     }
     const { auth } = authResult;
+
+    const mutating = request.method !== "GET" && request.method !== "HEAD" && request.method !== "OPTIONS";
+    if (mutating && !isTrustedMutation(request, allowTrain && isTrainAuth(request, env))) {
+      return json({ error: "Invalid origin." }, 403);
+    }
 
     try {
       if (path === "/api/quota" && request.method === "GET") {
@@ -685,6 +748,9 @@ export default {
           return json({ error: "Bearer TRAIN_TOKEN or Access required." }, 401);
         }
         return await handleQuotaReport(request, env);
+      }
+      if (path === "/api/waitlist" && request.method === "GET") {
+        return await handleWaitlistList(env);
       }
       if (path === "/api/dataset" && request.method === "GET") {
         return await handleDataset(env);
@@ -698,11 +764,12 @@ export default {
       }
       if (path.startsWith("/media/") && request.method === "GET") {
         const id = decodeURIComponent(path.slice("/media/".length)).replace(/\.jpg$/i, "");
-        // One Class B get (no HEAD). Display is always written at upload.
+        if (!isHexId(id)) return json({ error: "Not found." }, 404);
         return await serveObject(env, `display/${id}.jpg`, "public, max-age=31536000, immutable");
       }
       if (path.startsWith("/thumb/") && request.method === "GET") {
         const id = decodeURIComponent(path.slice("/thumb/".length)).replace(/\.jpg$/i, "");
+        if (!isHexId(id)) return json({ error: "Not found." }, 404);
         return await serveObject(env, `thumbs/${id}.jpg`, "public, max-age=31536000, immutable");
       }
       if (path === "/api/runs" && request.method === "GET") {
@@ -725,10 +792,15 @@ export default {
       }
     } catch (error) {
       console.error("labeler_error", error);
-      const message = error instanceof Error ? error.message : "Internal error";
-      return json({ error: message }, 500);
+      return json({ error: "Internal error" }, 500);
+    }
+
+    if ((path === "/join-list" || path === "/join-list.html") && request.method === "GET") {
+      const asset = await env.ASSETS.fetch(new URL("/join-list.html", url));
+      const headers = new Headers(asset.headers);
+      headers.set("cache-control", "no-store");
+      return new Response(asset.body, { status: asset.status, headers });
     }
 
     return env.ASSETS.fetch(request);
-  },
-} satisfies ExportedHandler<Env>;
+}

@@ -89,6 +89,40 @@ export function nowIso(): string {
   return new Date().toISOString();
 }
 
+const SECURITY_HEADERS: Record<string, string> = {
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "cross-origin-opener-policy": "same-origin",
+  "content-security-policy": [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; "),
+};
+
+export function applySecurityHeaders(request: Request, response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+  if (new URL(request.url).protocol === "https:") {
+    headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -97,6 +131,45 @@ export function json(data: unknown, status = 200): Response {
       "cache-control": "no-store",
     },
   });
+}
+
+export function sanitizeFileName(raw: string): string | null {
+  const base = raw.replace(/\\/g, "/").split("/").pop()?.trim() || "";
+  const cleaned = base.replace(/[^\w.\- ()[\]]+/g, "_").slice(0, 180);
+  if (!cleaned || cleaned === "." || cleaned === "..") return null;
+  return cleaned;
+}
+
+export function isJpeg(buf: ArrayBuffer): boolean {
+  const bytes = new Uint8Array(buf.slice(0, 3));
+  return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+}
+
+export function isHexId(value: string): boolean {
+  return /^[a-f0-9]{64}$/i.test(value);
+}
+
+/** Same-origin mutating requests, plus Bearer TRAIN_TOKEN callbacks that omit Origin. */
+export function isTrustedMutation(request: Request, allowTrain: boolean): boolean {
+  if (allowTrain) return true;
+  const url = new URL(request.url);
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try {
+      return new URL(origin).origin === url.origin;
+    } catch {
+      return false;
+    }
+  }
+  const referer = request.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin === url.origin;
+    } catch {
+      return false;
+    }
+  }
+  return false;
 }
 
 export function runId(): string {

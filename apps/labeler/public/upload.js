@@ -1,5 +1,14 @@
 const CONCURRENCY = 3;
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const els = {
   drop: document.getElementById("drop"),
   fileInput: document.getElementById("fileInput"),
@@ -98,8 +107,8 @@ function renderQueue() {
     const li = document.createElement("li");
     li.className = `q-item ${item.status}`;
     li.innerHTML = `
-      <span class="q-name">${item.file.name}</span>
-      <span class="q-status">${item.message || item.status}</span>`;
+      <span class="q-name">${escapeHtml(item.file.name)}</span>
+      <span class="q-status">${escapeHtml(item.message || item.status)}</span>`;
     els.queue.appendChild(li);
   }
   const waiting = queue.filter((q) => q.status === "queued" || q.status === "uploading").length;

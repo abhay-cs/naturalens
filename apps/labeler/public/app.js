@@ -1,6 +1,15 @@
 const HANDLE = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const RETRY_KEY = "naturalens.labeler.retryQueue";
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const state = {
   images: [],
   index: 0,
@@ -188,7 +197,7 @@ function renderFilm() {
     btn.innerHTML = `
       <img src="/thumb/${encodeURIComponent(img.id)}" alt="" loading="lazy" />
       <span class="meta">
-        <span class="name">${img.file}</span>
+        <span class="name">${escapeHtml(img.file)}</span>
         <span class="count">${img.boxes.length} bear${img.boxes.length === 1 ? "" : "s"}</span>
       </span>`;
     btn.addEventListener("click", () => go(index));

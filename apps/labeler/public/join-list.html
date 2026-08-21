@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Upload — NaturaLens labeler</title>
+    <title>Waitlist — NaturaLens</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/app.css?v=9" />
+    <link rel="stylesheet" href="/app.css?v=12" />
   </head>
   <body class="page">
     <header class="top">
@@ -21,35 +21,42 @@
         <img class="mark" src="/owl.png" width="28" height="28" alt="" />
         <div>
           <p class="kicker">NaturaLens field desk</p>
-          <h1>Upload</h1>
+          <h1>Waitlist</h1>
         </div>
       </div>
       <nav class="nav">
         <a href="/">Label</a>
-        <a href="/upload.html" aria-current="page">Upload</a>
+        <a href="/upload.html">Upload</a>
         <a href="/runs.html">Runs</a>
-        <a href="/join-list">Waitlist</a>
+        <a href="/join-list" aria-current="page">Waitlist</a>
       </nav>
-      <p class="progress" id="progress">Drop photos to add them</p>
-      <p class="quota" id="quota" title="R2 free-tier guard"></p>
+      <p class="progress" id="progress">Loading signups…</p>
     </header>
     <main class="page-main">
-      <section class="drop" id="drop">
-        <p class="drop-title">Drop polar bear photos here</p>
-        <p class="drop-sub">JPG / PNG / WEBP · EXIF orientation is fixed on your machine before upload</p>
-        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp" multiple hidden />
-        <button type="button" class="primary" id="pickBtn">Choose files</button>
-      </section>
-      <section class="queue-wrap">
-        <div class="queue-head">
-          <h2>Queue</h2>
-          <p id="queueStats">0 waiting</p>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Landing page signups</h2>
+          <div class="run-actions">
+            <button type="button" class="ghost" id="copyBtn" disabled>Copy emails</button>
+            <button type="button" class="ghost" id="refreshBtn">Refresh</button>
+          </div>
         </div>
-        <ul class="queue" id="queue"></ul>
+        <p class="hint" id="hint">Emails from the Naturalens.ca waitlist.</p>
+        <div class="waitlist-table-wrap">
+          <table class="waitlist-table">
+            <thead>
+              <tr>
+                <th scope="col">Email</th>
+                <th scope="col">Joined</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="empty" hidden>No waitlist emails yet.</p>
       </section>
     </main>
     <div class="toast" id="toast" hidden></div>
-    <script src="/quota.js?v=4"></script>
-    <script src="/upload.js?v=4"></script>
+    <script src="/join-list.js"></script>
   </body>
 </html>
