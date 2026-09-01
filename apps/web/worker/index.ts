@@ -4,6 +4,41 @@ export interface Env {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const WAITLIST_PER_IP_HOUR = 8;
+
+const SECURITY_HEADERS: Record<string, string> = {
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "cross-origin-opener-policy": "same-origin",
+  "content-security-policy": [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; "),
+};
+
+function applySecurityHeaders(request: Request, response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+  if (new URL(request.url).protocol === "https:") {
+    headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -15,20 +50,35 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-async function handleWaitlist(request: Request, env: Env): Promise<Response> {
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "access-control-allow-methods": "POST, OPTIONS",
-        "access-control-allow-headers": "content-type",
-        "access-control-max-age": "86400",
-      },
-    });
+function isSameOrigin(request: Request): boolean {
+  const url = new URL(request.url);
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try {
+      return new URL(origin).origin === url.origin;
+    } catch {
+      return false;
+    }
   }
+  const referer = request.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin === url.origin;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
 
+const JOINED_MESSAGE = "You are on the list. We will write when access opens.";
+
+async function handleWaitlist(request: Request, env: Env): Promise<Response> {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed." }, 405);
+  }
+  if (!isSameOrigin(request)) {
+    return json({ error: "Invalid origin." }, 403);
   }
 
   let body: unknown;
@@ -51,12 +101,20 @@ async function handleWaitlist(request: Request, env: Env): Promise<Response> {
   }
 
   const userAgent = request.headers.get("user-agent")?.slice(0, 512) ?? null;
-  const ip =
-    request.headers.get("cf-connecting-ip")?.slice(0, 64) ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 64) ??
-    null;
+  const ip = request.headers.get("cf-connecting-ip")?.slice(0, 64) ?? null;
 
   try {
+    if (ip) {
+      const recent = await env.WAITLIST_DB.prepare(
+        `SELECT COUNT(*) AS n FROM waitlist WHERE ip = ? AND created_at >= datetime('now', '-1 hour')`,
+      )
+        .bind(ip)
+        .first<{ n: number }>();
+      if ((recent?.n ?? 0) >= WAITLIST_PER_IP_HOUR) {
+        return json({ error: "Too many tries. Try again later." }, 429);
+      }
+    }
+
     const existing = await env.WAITLIST_DB.prepare(
       "SELECT id FROM waitlist WHERE email = ? LIMIT 1",
     )
@@ -64,11 +122,7 @@ async function handleWaitlist(request: Request, env: Env): Promise<Response> {
       .first<{ id: number }>();
 
     if (existing) {
-      return json({
-        ok: true,
-        alreadyJoined: true,
-        message: "You are already on the waitlist.",
-      });
+      return json({ ok: true, message: JOINED_MESSAGE });
     }
 
     await env.WAITLIST_DB.prepare(
@@ -77,11 +131,7 @@ async function handleWaitlist(request: Request, env: Env): Promise<Response> {
       .bind(email, userAgent, ip)
       .run();
 
-    return json({
-      ok: true,
-      alreadyJoined: false,
-      message: "You are on the list. We will write when access opens.",
-    });
+    return json({ ok: true, message: JOINED_MESSAGE });
   } catch (error) {
     console.error("waitlist_insert_failed", error);
     return json({ error: "Could not join the waitlist. Try again." }, 500);
@@ -93,9 +143,9 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/waitlist") {
-      return handleWaitlist(request, env);
+      return applySecurityHeaders(request, await handleWaitlist(request, env));
     }
 
-    return env.ASSETS.fetch(request);
+    return applySecurityHeaders(request, await env.ASSETS.fetch(request));
   },
 } satisfies ExportedHandler<Env>;
