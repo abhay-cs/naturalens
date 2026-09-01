@@ -17,6 +17,12 @@ import {
   loadHistory,
 } from '../lib/history';
 import { fetchSpeciesInfo } from '../lib/detector';
+import {
+  clearSession,
+  loadSession,
+  normalizeEmail,
+  type Session,
+} from '../lib/auth';
 import { useNetworkOnline } from '../lib/network';
 import type { BannerTone } from '../components/Banner';
 
@@ -59,6 +65,16 @@ interface AppStateContextValue {
   /** The find whose pin is selected on the map, if any. */
   selectedPin: HistoryEntry | null;
   setSelectedPinId: (id: string | null) => void;
+  /** Who is signed in, or null. `App.tsx` gates the whole app on this. */
+  session: Session | null;
+  /**
+   * True until the stored session has been read. The native splash has to wait on this,
+   * or a signed-in user sees the intro for a frame before the camera.
+   */
+  sessionLoading: boolean;
+  /** Called by the auth flow once a code has verified. */
+  completeSignIn: (session: Session) => void;
+  signOut: () => Promise<void>;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -70,6 +86,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
   const networkOnline = useNetworkOnline();
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -145,6 +163,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       );
     }
   }, [networkOnline, pushBanner]);
+
+  // Read once at launch. `loadSession` swallows a corrupt read and returns null, so the
+  // worst case is being asked to sign in again — never a crash before the first frame.
+  useEffect(() => {
+    let cancelled = false;
+
+    loadSession().then((stored) => {
+      if (cancelled) return;
+      setSession(stored);
+      setSessionLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const completeSignIn = useCallback((next: Session) => {
+    setSession({ ...next, email: normalizeEmail(next.email) });
+  }, []);
+
+  /**
+   * Drops the session but leaves the finds alone. History is local to the device and was
+   * never tied to an identity (§4) — deleting someone's photographs because they signed
+   * out would be destroying data they never handed us in the first place.
+   */
+  const signOut = useCallback(async () => {
+    await clearSession();
+    setSession(null);
+    setActiveTab('camera');
+    setSelectedEntryId(null);
+    setSelectedPinId(null);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,6 +285,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setSelectedEntryId,
       selectedPin,
       setSelectedPinId,
+      session,
+      sessionLoading,
+      completeSignIn,
+      signOut,
     }),
     [
       activeTab,
@@ -248,6 +303,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       backfillSpeciesInfo,
       selectedEntry,
       selectedPin,
+      session,
+      sessionLoading,
+      completeSignIn,
+      signOut,
     ],
   );
 

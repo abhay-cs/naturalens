@@ -47,7 +47,9 @@ Everything else is roadmap.
 
 ### 1.3 Non-goals for the MVP
 
-- No accounts, no sync, no backend of our own. History is local to the device.
+- No sync and no backend of our own. History is local to the device. There *is* a
+  sign-in as of this release (§5c) — but it is a local stub, and no account exists on
+  any server, because there is no server.
 - No continuous/live detection — one photo, on a button press.
 - No bounding boxes. The model returns a label, not a location in the frame.
 - No offline identification. Naming a species is a network call and fails without one;
@@ -341,6 +343,75 @@ change to the data model, not a screen.
 
 ---
 
+## 5c. Sign-in, and the fact that it isn't real yet
+
+Three screens now stand ahead of the app: an onboarding intro (19), an email entry (20),
+and a six-digit code (21). `AuthFlow` is a sibling of `MainLayout` with a local
+`'intro' | 'email' | 'otp'` step, and `App.tsx` renders one or the other on whether
+`session` is null. **It is a blocking gate** — camera, finds and map are unreachable until
+a code verifies.
+
+**The verification is a stub, and this is the most important sentence in this section.**
+`lib/auth.ts` generates the code on the device, stores it on the device, and compares it on
+the device. Any address is accepted. Nothing is emailed. The code is printed to the Metro
+console and shown on Screen 21 under `__DEV__`, because otherwise the flow cannot be walked
+on a phone at all.
+
+That was a deliberate choice rather than an unfinished one. There is no auth backend to
+call: `apps/web/worker` exposes `POST /api/waitlist` and nothing else, and since it gained
+`isSameOrigin()` it rejects any request carrying neither an `Origin` nor a `Referer` header
+— which is every request React Native makes. So a real flow is a worker change, an email
+provider, and a token store, none of which are screens. The stub is confined to three
+functions in one file (`requestCode`, `verifyCode`, and the `PENDING_KEY` they share) so
+that swapping the transport touches no component.
+
+`session` lives in `AppStateContext` for the same reason `history` does — `App.tsx` and
+`SettingsSheet` both read it. `step` and the typed address do **not**: nothing outside the
+flow reads them, the same call made for the pending detection in §5. And there is no
+separate `has-seen-intro` flag; the session *is* the flag, which is one fewer key and one
+fewer thing that can disagree with itself. The consequence, accepted knowingly: signing out
+returns you to the intro, not to the email screen.
+
+`signOut` drops the session and leaves the finds alone. History is local and was never tied
+to an identity (§4) — deleting someone's photographs because they signed out would be
+destroying data they never handed us.
+
+### Why the intro has no photograph
+
+The screen was specified as documentary wildlife photography. There is none in the repo,
+and the five animal SVGs on the landing site are fill-based silhouettes with no stroke
+attributes at all, so beside the owl mark and the icon set they read as a different
+product. Rather than ship a placeholder photo or an illustration that fights the line
+system, Screen 19 is inverted polarity and 44px Outfit ExtraLight — a black ground and
+the largest type in the app.
+
+That also buys the cut into Screen 20, which is paper white. The flow goes dark, then
+bright, instead of three white screens in a row. `BrandSplash` fades its white layer to
+zero over the top of the intro, so the handoff reads as a reveal rather than a flash.
+
+### Two mechanics worth not rediscovering
+
+- **`sessionLoading` holds the native splash alongside `fontsLoaded`.** The stored session
+  is an async read, so without it a signed-in user gets a frame of the onboarding intro
+  before the camera — the same class of bug the font gate already existed to prevent.
+- **Screen 21 is one hidden `TextInput` stretched across six drawn boxes.** Six real inputs
+  is the obvious build and the wrong one: one-time-code autofill arrives as a single
+  six-character paste, and backspace across a box boundary has to be emulated from key
+  events. One input gets both for free and the boxes become what they are — a readout. Its
+  `selection` is pinned to the end so a tap cannot drop the caret mid-string, where a
+  keystroke would rewrite the middle of the code and leave the boxes lying about it.
+
+Screens 20 and 21 are the **first text inputs in the app**, so they also settle the field
+style: uppercase 11px label, a 2px bordered box whose border goes to ink on focus, a pill
+submit, caption-grey fine print. That is lifted from the waitlist form on the landing site
+rather than invented — same design system, already solved, and two sign-up forms that look
+different is worse than a little duplication. Field-level errors render in **ink, not
+`danger`** (`FieldError`): the system reserves hue for status pills and overlays (§6), and
+the landing page already renders its waitlist errors in black. Conditions of the world
+still get a banner.
+
+---
+
 ## 6. Design system
 
 Source of truth: [`packages/design/`](../packages/design/). Edit `tokens.json` once,
@@ -370,6 +441,8 @@ the change. The browsable Volume One spec lives in
 
 ## 7. Known gaps
 
+- **Sign-in is a local stub (§5c).** Any address is accepted, the code is generated
+  on-device, and nothing is emailed. The gate is real; the authentication is not.
 - The Gemini key ships to the client (§2.2).
 - Nothing is tested — there's no test runner in the project.
 - CI typechecks the mobile app only, and only on `main`, so branches get no CI. It also
