@@ -1,78 +1,61 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import type { BannerTone } from '../components/Banner';
+import { api } from './api';
 
 /**
- * Sign-in — email, then a six-digit code.
+ * Sign-in — email, then a six-digit code emailed by the naturalens-web Worker.
  *
- * ─────────────────────────────────────────────────────────────────────────────────────
- *  STUB. There is no auth backend. Read `docs/DESIGN.md` §7 before trusting this.
- *
- *  The code is generated on this device, stored on this device, and compared on this
- *  device, so any address is accepted and nothing is emailed. That is a deliberate
- *  placeholder, not an oversight: the app has no server of its own (§2), and the
- *  Cloudflare worker in `apps/web` both lacks an auth route and — since it gained
- *  `isSameOrigin()` — rejects any request without an `Origin` or `Referer` header,
- *  which is every request React Native makes.
- *
- *  Three functions become network calls when a real endpoint lands, and only these
- *  three: `requestCode`, `verifyCode`, and the `PENDING_KEY` storage they share. The
- *  screens above them already handle latency and typed failures, so swapping the
- *  transport should not touch a single component.
- * ─────────────────────────────────────────────────────────────────────────────────────
+ * `requestCode` and `verifyCode` are the only network calls. Screens handle latency and
+ * typed failures; swapping copy or the Worker path should not require touching a layout.
  */
 
-/** Versioned, like `naturalens-history-v1` — a schema change can migrate rather than misread. */
-const SESSION_KEY = 'naturalens-session-v1';
-const PENDING_KEY = 'naturalens-pending-code-v1';
-
-/** How long a requested code stays good. */
-const CODE_TTL_MS = 10 * 60 * 1000;
+const TOKEN_KEY = 'naturalens-session-token-v2';
+const PROFILE_KEY = 'naturalens-session-v2';
+const LEGACY_SESSION_KEY = 'naturalens-session-v1';
+const LEGACY_PENDING_KEY = 'naturalens-pending-code-v1';
 
 export const OTP_LENGTH = 6;
 
-/**
- * The same test the landing page and the worker use
- * (`apps/web/src/components/sections/Waitlist.tsx`, `EMAIL_RE` in `apps/web/worker/index.ts`).
- * Copied rather than loosened so the two surfaces cannot disagree about what an address is —
- * an address the site accepts and the app rejects would be our bug reported as theirs.
- */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** The worker's limit. Longer than this is not an address, it's a paste accident. */
 const EMAIL_MAX = 254;
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string | null;
+  createdAt: string;
+}
+
 export interface Session {
+  token: string;
+  user: UserProfile;
+  /** Convenience — same as `user.email`, kept so screens that read `session.email` still typecheck. */
   email: string;
-  signedInAt: number;
 }
 
-interface PendingCode {
-  email: string;
-  code: string;
-  expiresAt: number;
+interface AuthErrorOptions {
+  field?: boolean;
+  retryAfterSec?: number | null;
+  expired?: boolean;
 }
 
-/**
- * A failure whose `message` is the UI copy, with the tone riding along — the convention
- * `DetectorError` set in `lib/detector.ts` and `docs/DESIGN.md` §5a. The message is
- * rendered verbatim, so it has to read as a sentence someone wrote on purpose.
- */
 export class AuthError extends Error {
   tone: BannerTone;
+  field: boolean;
+  retryAfterSec: number | null;
+  expired: boolean;
 
-  constructor(message: string, tone: BannerTone = 'danger') {
+  constructor(message: string, tone: BannerTone = 'danger', options: AuthErrorOptions = {}) {
     super(message);
     this.name = 'AuthError';
     this.tone = tone;
+    this.field = options.field ?? false;
+    this.retryAfterSec = options.retryAfterSec ?? null;
+    this.expired = options.expired ?? false;
   }
 }
 
-/**
- * Returns the copy to show under the field, or `null` if the address is fine.
- *
- * A string rather than a thrown error because this one never leaves the screen — it is a
- * field-level correction, not a condition of the world, so it doesn't earn a banner.
- */
 export function validateEmail(value: string): string | null {
   const email = value.trim();
   if (!email) return 'Email is required.';
@@ -81,99 +64,121 @@ export function validateEmail(value: string): string | null {
   return null;
 }
 
-/** Trim and lowercase, as the worker does before it stores anything. */
 export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
-/** STUB — stands in for the round trip a real `POST /api/auth/request-code` would take. */
-function stubLatency(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export async function requestCode(email: string): Promise<void> {
+  await api<{ ok: true }>('/api/auth/request-code', {
+    method: 'POST',
+    body: { email: normalizeEmail(email) },
+  });
 }
 
-/**
- * Sends a code to `email`.
- *
- * Resolves with the code itself so the screen can offer it under `__DEV__` — without that
- * the flow is untestable on a device, since nothing is actually delivered. A real
- * implementation returns nothing, and the `__DEV__` block above it goes away with this one.
- */
-export async function requestCode(email: string): Promise<string> {
-  await stubLatency(700);
-
-  const code = String(Math.floor(Math.random() * 10 ** OTP_LENGTH)).padStart(OTP_LENGTH, '0');
-  const pending: PendingCode = {
-    email: normalizeEmail(email),
-    code,
-    expiresAt: Date.now() + CODE_TTL_MS,
-  };
-
-  try {
-    await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-  } catch {
-    throw new AuthError("Couldn't start sign-in on this device. Try again.");
-  }
-
-  // The only place the code exists outside storage. Kept to `__DEV__` so a release build
-  // doesn't print it, even though a release build shouldn't be running this file at all.
-  if (__DEV__) console.log(`[auth stub] code for ${pending.email}: ${code}`);
-
-  return code;
-}
-
-/** Checks `code` against the one we issued, and signs in on a match. */
 export async function verifyCode(email: string, code: string): Promise<Session> {
-  await stubLatency(600);
+  const data = await api<{ token: string; user: UserProfile }>('/api/auth/verify-code', {
+    method: 'POST',
+    body: { email: normalizeEmail(email), code },
+  });
 
-  let pending: PendingCode | null = null;
-  try {
-    const raw = await AsyncStorage.getItem(PENDING_KEY);
-    if (raw) pending = JSON.parse(raw) as PendingCode;
-  } catch {
-    pending = null;
-  }
-
-  if (!pending || pending.email !== normalizeEmail(email)) {
-    throw new AuthError('That code has expired. Send a new one.', 'warning');
-  }
-
-  if (Date.now() > pending.expiresAt) {
-    await AsyncStorage.removeItem(PENDING_KEY).catch(() => {});
-    throw new AuthError('That code has expired. Send a new one.', 'warning');
-  }
-
-  if (pending.code !== code) {
-    throw new AuthError("That code didn't match. Check it and try again.", 'warning');
-  }
-
-  const session: Session = { email: pending.email, signedInAt: Date.now() };
-
-  try {
-    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    await AsyncStorage.removeItem(PENDING_KEY);
-  } catch {
+  if (!data?.token || !data.user?.email) {
     throw new AuthError("Couldn't finish signing in. Try again.");
   }
 
+  const session = sessionFrom(data.token, data.user);
+  await persistSession(session);
   return session;
 }
 
-/** A corrupt read starts clean rather than crashing at launch — same rule as `loadHistory`. */
+export async function fetchMe(token: string): Promise<UserProfile> {
+  const data = await api<{ user: UserProfile }>('/api/me', { token });
+  if (!data?.user?.email) throw new AuthError('Sign in again.', 'warning');
+  return data.user;
+}
+
+export async function updateDisplayName(token: string, displayName: string): Promise<UserProfile> {
+  const data = await api<{ user: UserProfile }>('/api/me', {
+    method: 'PATCH',
+    token,
+    body: { displayName },
+  });
+  if (!data?.user?.email) throw new AuthError("Couldn't save that name. Try again.");
+  return data.user;
+}
+
+export async function logoutRemote(token: string): Promise<void> {
+  try {
+    await api('/api/auth/logout', { method: 'POST', token });
+  } catch {
+    // Local sign-out still has to succeed if the radio is down.
+  }
+}
+
 export async function loadSession(): Promise<Session | null> {
   try {
-    const raw = await AsyncStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
+    const [token, raw] = await Promise.all([
+      SecureStore.getItemAsync(TOKEN_KEY),
+      AsyncStorage.getItem(PROFILE_KEY),
+    ]);
+    if (!token || !raw) {
+      if (token || raw) await clearSession();
+      return null;
+    }
 
-    const parsed = JSON.parse(raw) as Session;
-    if (typeof parsed?.email !== 'string' || !parsed.email) return null;
+    const user = parseProfile(raw);
+    if (!user) {
+      await clearSession();
+      return null;
+    }
 
-    return { email: parsed.email, signedInAt: parsed.signedInAt ?? 0 };
+    return sessionFrom(token, user);
   } catch {
     return null;
   }
 }
 
-/** Drops the session and any half-finished code with it. */
+export async function persistSession(session: Session): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(TOKEN_KEY, session.token);
+    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(session.user));
+  } catch {
+    throw new AuthError("Couldn't finish signing in. Try again.");
+  }
+}
+
 export async function clearSession(): Promise<void> {
-  await AsyncStorage.multiRemove([SESSION_KEY, PENDING_KEY]);
+  await Promise.all([
+    SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {}),
+    AsyncStorage.multiRemove([PROFILE_KEY, LEGACY_SESSION_KEY, LEGACY_PENDING_KEY]),
+  ]);
+}
+
+function sessionFrom(token: string, user: UserProfile): Session {
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: normalizeEmail(user.email),
+      displayName: user.displayName ?? null,
+      createdAt: user.createdAt,
+    },
+    email: normalizeEmail(user.email),
+  };
+}
+
+function parseProfile(raw: string): UserProfile | null {
+  try {
+    const parsed = JSON.parse(raw) as UserProfile;
+    if (typeof parsed?.id !== 'string' || typeof parsed?.email !== 'string' || !parsed.email) {
+      return null;
+    }
+    return {
+      id: parsed.id,
+      email: parsed.email,
+      displayName: typeof parsed.displayName === 'string' ? parsed.displayName : null,
+      createdAt: typeof parsed.createdAt === 'string' ? parsed.createdAt : '',
+    };
+  } catch {
+    return null;
+  }
 }

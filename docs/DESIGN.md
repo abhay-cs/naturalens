@@ -47,9 +47,9 @@ Everything else is roadmap.
 
 ### 1.3 Non-goals for the MVP
 
-- No sync and no backend of our own. History is local to the device. There *is* a
-  sign-in as of this release (§5c) — but it is a local stub, and no account exists on
-  any server, because there is no server.
+- No sync of finds. History is local to the device. Sign-in (§5c) stores an email and
+  optional display name on the Worker so we can email a code; photographs still do not
+  leave the phone except when you identify one.
 - No continuous/live detection — one photo, on a button press.
 - No bounding boxes. The model returns a label, not a location in the frame.
 - No offline identification. Naming a species is a network call and fails without one;
@@ -119,7 +119,8 @@ Picker on 13/14, no `READ_MEDIA_*`), not a JS album UI.
 └────────────────────────────────────────────────────┘
 ```
 
-There is no server of ours. The app calls Gemini directly.
+Identification has no server of ours — the app calls Gemini directly. Sign-in is the
+exception: email and OTP go to the `naturalens-web` Worker (§5c).
 
 | Layer | Choice |
 |---|---|
@@ -343,38 +344,33 @@ change to the data model, not a screen.
 
 ---
 
-## 5c. Sign-in, and the fact that it isn't real yet
+## 5c. Sign-in
 
-Three screens now stand ahead of the app: an onboarding intro (19), an email entry (20),
+Three screens stand ahead of the app: an onboarding intro (19), an email entry (20),
 and a six-digit code (21). `AuthFlow` is a sibling of `MainLayout` with a local
 `'intro' | 'email' | 'otp'` step, and `App.tsx` renders one or the other on whether
 `session` is null. **It is a blocking gate** — camera, finds and map are unreachable until
 a code verifies.
 
-**The verification is a stub, and this is the most important sentence in this section.**
-`lib/auth.ts` generates the code on the device, stores it on the device, and compares it on
-the device. Any address is accepted. Nothing is emailed. The code is printed to the Metro
-console and shown on Screen 21 under `__DEV__`, because otherwise the flow cannot be walked
-on a phone at all.
+The Worker at `naturalens.ca` owns the code. `POST /api/auth/request-code` stores an HMAC
+of the digits in D1 and emails them through Resend. `POST /api/auth/verify-code` creates
+the user on first success and returns a Bearer token, stored in the Keychain via
+`expo-secure-store`. The profile (`id`, email, optional display name, member-since) is
+cached in AsyncStorage so Settings can render offline. `GET /api/me` revalidates in the
+background after launch; a 401 signs the device out. Network failure keeps the cached
+session — this is a field app.
 
-That was a deliberate choice rather than an unfinished one. There is no auth backend to
-call: `apps/web/worker` exposes `POST /api/waitlist` and nothing else, and since it gained
-`isSameOrigin()` it rejects any request carrying neither an `Origin` nor a `Referer` header
-— which is every request React Native makes. So a real flow is a worker change, an email
-provider, and a token store, none of which are screens. The stub is confined to three
-functions in one file (`requestCode`, `verifyCode`, and the `PENDING_KEY` they share) so
-that swapping the transport touches no component.
+Auth routes do **not** use the waitlist `isSameOrigin()` gate. React Native sends neither
+`Origin` nor `Referer`. Waitlist stays origin-locked; auth is rate-limited by email and IP
+instead.
 
 `session` lives in `AppStateContext` for the same reason `history` does — `App.tsx` and
-`SettingsSheet` both read it. `step` and the typed address do **not**: nothing outside the
-flow reads them, the same call made for the pending detection in §5. And there is no
-separate `has-seen-intro` flag; the session *is* the flag, which is one fewer key and one
-fewer thing that can disagree with itself. The consequence, accepted knowingly: signing out
-returns you to the intro, not to the email screen.
+`SettingsSheet` both read it. `step` and the typed address do **not**. There is no
+separate `has-seen-intro` flag; the session *is* the flag. Signing out returns you to the
+intro, not to the email screen, and leaves the finds alone. History is local and was never
+tied to an identity (§4).
 
-`signOut` drops the session and leaves the finds alone. History is local and was never tied
-to an identity (§4) — deleting someone's photographs because they signed out would be
-destroying data they never handed us.
+Display name is edited in Settings (`PATCH /api/me`), not during sign-in.
 
 ### Why the intro has no photograph
 
@@ -441,12 +437,12 @@ the change. The browsable Volume One spec lives in
 
 ## 7. Known gaps
 
-- **Sign-in is a local stub (§5c).** Any address is accepted, the code is generated
-  on-device, and nothing is emailed. The gate is real; the authentication is not.
+- **Sign-in emails a six-digit code via Resend (§5c).** The gate is real. Codes never
+  appear in API JSON or production logs. `RESEND_API_KEY` and `AUTH_PEPPER` must be set on
+  `naturalens-web` or request-code fails closed.
 - The Gemini key ships to the client (§2.2).
-- Nothing is tested — there's no test runner in the project.
-- CI typechecks the mobile app only, and only on `main`, so branches get no CI. It also
-  doesn't run `generate.mjs --check`, so the generated token outputs can drift from
+- CI typechecks the mobile app and the web Worker. It still doesn't run
+  `generate.mjs --check`, so the generated token outputs can drift from
   `tokens.json` without anything noticing.
 - The resolved Android manifest still pulls in `READ/WRITE_EXTERNAL_STORAGE` from a
   dependency's config plugin. Worth tracking down — the app only writes to its own

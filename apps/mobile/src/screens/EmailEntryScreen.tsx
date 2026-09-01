@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput } from 'react-native';
+import { Linking, StyleSheet, Text, TextInput } from 'react-native';
 import { BorderRadii, Colors, Spacing, Typography } from '../theme/tokens';
 import { AuthScaffold } from '../components/AuthScaffold';
 import { Button } from '../components/Button';
@@ -11,20 +11,15 @@ interface EmailEntryScreenProps {
   email: string;
   onEmailChange: (value: string) => void;
   onBack: () => void;
-  /** Carries the stub's code through to Screen 21 — see `lib/auth.ts`. */
-  onCodeSent: (devCode: string) => void;
+  onCodeSent: () => void;
 }
 
 /**
  * Screen 20 — the address.
  *
- * The first text input in the app, so the field style starts here. It is taken from the
- * waitlist form on the landing site rather than invented: uppercase 11px label, a 2px
- * bordered box, the border darkening to ink on focus, a pill submit, and caption-grey fine
- * print underneath. That surface already solved this in the same design system, and two
- * sign-up forms that look different is a worse outcome than a little duplication.
- *
- * Errors go under the field in ink (`FieldError`), not into a banner — see that file.
+ * Field style is taken from the waitlist form on the landing site: uppercase 11px label,
+ * a 2px bordered box, the border darkening to ink on focus, a pill submit, and caption-grey
+ * fine print. Errors go under the field in ink (`FieldError`); network failures get a banner.
  */
 export function EmailEntryScreen({
   email,
@@ -50,16 +45,16 @@ export function EmailEntryScreen({
     setSending(true);
 
     try {
-      const devCode = await requestCode(email);
-      onCodeSent(devCode);
+      await requestCode(email);
+      onCodeSent();
     } catch (err) {
-      // The message is the copy and the tone travels with it — `docs/DESIGN.md` §5a.
-      // A failure to reach the server is a condition of the world, so it earns a banner;
-      // a malformed address, handled above, does not.
-      const tone = err instanceof AuthError ? err.tone : 'danger';
-      const message =
-        err instanceof AuthError ? err.message : "Couldn't send a code. Try again.";
-      pushBanner(message, tone);
+      const authErr = err instanceof AuthError ? err : null;
+      const message = authErr?.message ?? "Couldn't send a code. Try again.";
+      if (authErr?.field) {
+        setError(message);
+      } else {
+        pushBanner(message, authErr?.tone ?? 'danger');
+      }
     } finally {
       setSending(false);
     }
@@ -70,7 +65,7 @@ export function EmailEntryScreen({
       onBack={onBack}
       eyebrow="Sign in"
       title="Where should we send your code?"
-      subtitle="No password. We send six digits and you type them on the next screen."
+      subtitle="No password. We send six digits to this address and you type them on the next screen."
       footer={
         <>
           <Button
@@ -80,6 +75,25 @@ export function EmailEntryScreen({
           />
           <Text style={styles.fine}>
             No newsletter, no forwarding. Your finds stay on this phone either way.
+          </Text>
+          <Text style={styles.legal}>
+            By continuing you agree to the{' '}
+            <Text
+              style={styles.link}
+              onPress={() => Linking.openURL('https://naturalens.ca/terms')}
+              accessibilityRole="link"
+            >
+              Terms
+            </Text>
+            {' '}and{' '}
+            <Text
+              style={styles.link}
+              onPress={() => Linking.openURL('https://naturalens.ca/privacy')}
+              accessibilityRole="link"
+            >
+              Privacy
+            </Text>
+            {' '}policy.
           </Text>
         </>
       }
@@ -124,10 +138,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: BorderRadii.input,
     paddingHorizontal: Spacing.m,
-    // Vertical padding rather than a height, so the box grows with the system text size.
     paddingVertical: Spacing.m,
   },
-  /** Focus is a border that goes to ink. There is no focus ring — the system has no hue. */
   inputFocused: {
     borderColor: Colors.fg,
   },
@@ -136,5 +148,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.caption,
     textAlign: 'center',
+  },
+  legal: {
+    ...Typography.small,
+    fontSize: 13,
+    color: Colors.caption,
+    textAlign: 'center',
+  },
+  link: {
+    color: Colors.fg,
+    textDecorationLine: 'underline',
   },
 });

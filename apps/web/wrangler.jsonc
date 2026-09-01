@@ -19,11 +19,15 @@
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"
   },
+  "vars": {
+    "AUTH_FROM": "NaturaLens <hello@naturalens.ca>"
+  },
   "d1_databases": [
     {
       "binding": "WAITLIST_DB",
       "database_name": "naturalens-waitlist",
-      "database_id": "5d04113a-851b-485c-a0e9-0d4ccb02cd07"
+      "database_id": "5d04113a-851b-485c-a0e9-0d4ccb02cd07",
+      "migrations_dir": "migrations"
     }
   ]
 }

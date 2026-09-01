@@ -18,9 +18,14 @@ import {
 } from '../lib/history';
 import { fetchSpeciesInfo } from '../lib/detector';
 import {
+  AuthError,
   clearSession,
+  fetchMe,
   loadSession,
+  logoutRemote,
   normalizeEmail,
+  persistSession,
+  updateDisplayName,
   type Session,
 } from '../lib/auth';
 import { useNetworkOnline } from '../lib/network';
@@ -75,6 +80,8 @@ interface AppStateContextValue {
   /** Called by the auth flow once a code has verified. */
   completeSignIn: (session: Session) => void;
   signOut: () => Promise<void>;
+  /** Saves a display name on the server and updates the cached profile. */
+  saveDisplayName: (name: string) => Promise<void>;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -173,6 +180,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setSession(stored);
       setSessionLoading(false);
+
+      if (!stored) return;
+
+      fetchMe(stored.token)
+        .then(async (user) => {
+          if (cancelled) return;
+          const next: Session = {
+            token: stored.token,
+            user,
+            email: normalizeEmail(user.email),
+          };
+          await persistSession(next);
+          if (!cancelled) setSession(next);
+        })
+        .catch(async (error) => {
+          if (cancelled) return;
+          if (error instanceof AuthError && error.expired) {
+            await clearSession();
+            if (!cancelled) setSession(null);
+          }
+        });
     });
 
     return () => {
@@ -181,7 +209,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completeSignIn = useCallback((next: Session) => {
-    setSession({ ...next, email: normalizeEmail(next.email) });
+    setSession({
+      ...next,
+      email: normalizeEmail(next.email),
+      user: { ...next.user, email: normalizeEmail(next.user.email) },
+    });
   }, []);
 
   /**
@@ -190,12 +222,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
    * out would be destroying data they never handed us in the first place.
    */
   const signOut = useCallback(async () => {
+    const token = session?.token;
+    if (token) await logoutRemote(token);
     await clearSession();
     setSession(null);
     setActiveTab('camera');
     setSelectedEntryId(null);
     setSelectedPinId(null);
-  }, []);
+  }, [session]);
+
+  const saveDisplayName = useCallback(
+    async (name: string) => {
+      if (!session) throw new AuthError('Sign in again.', 'warning', { expired: true });
+      const user = await updateDisplayName(session.token, name);
+      const next: Session = {
+        token: session.token,
+        user,
+        email: normalizeEmail(user.email),
+      };
+      await persistSession(next);
+      setSession(next);
+    },
+    [session],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -289,6 +338,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       sessionLoading,
       completeSignIn,
       signOut,
+      saveDisplayName,
     }),
     [
       activeTab,
@@ -307,6 +357,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       sessionLoading,
       completeSignIn,
       signOut,
+      saveDisplayName,
     ],
   );
 
